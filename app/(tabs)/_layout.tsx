@@ -93,6 +93,7 @@ export default function TabLayout() {
               </View>
             </View>
           ),
+          tabBarLabel: () => null, // Remove the title so only the icon shows
         }}
       />
       <Tabs.Screen

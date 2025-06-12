@@ -82,15 +82,6 @@ export default function TabLayout() {
               >
                 <FontAwesome name="qrcode" size={36} color="#fff" />
               </View>
-              <View style={{ height: 35 }} />
-              <View>
-                <FontAwesome
-                  name="circle"
-                  size={0}
-                  color="transparent"
-                  style={{ position: "absolute" }}
-                />
-              </View>
             </View>
           ),
           tabBarLabel: () => null, // Remove the title so only the icon shows

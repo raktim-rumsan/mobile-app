@@ -5,7 +5,7 @@ This is a React Native mobile application built with Expo and Gluestack UI v2, u
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v23 or later recommended)
-- [Yarn](https://classic.yarnpkg.com/lang/en/) or [npm](https://www.npmjs.com/)
+- [npm](https://www.npmjs.com/)
 - [Expo CLI](https://docs.expo.dev/get-started/installation/) (`npm install -g expo-cli`)
 
 ## 1. Clone the Repository
@@ -43,6 +43,8 @@ This will launch the Expo Dev Tools in your browser. You can run the app on an e
   ```sh
   npm run web
   ```
+
+NOTE: If you are using Expo Go App, Make sure to run the expo app and your development machine over same wifi.
 
 ## 5. Building the App
 

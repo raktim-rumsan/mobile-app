@@ -8,6 +8,7 @@ import {
   Platform,
   TextInput,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { Box } from "@/components/ui/box";
 import { HStack } from "@/components/ui/hstack";
@@ -130,20 +131,14 @@ export default function ChatScreen() {
     }
   };
 
-  const renderBotAvatar = () => (
-    <Box style={styles.aiAvatar}>
-      <Ionicons name="chatbubble-ellipses" size={24} color="white" />
-    </Box>
-  );
-
   const renderMessage = ({ item }: { item: Message }) => (
     <Box className="mb-6">
       <HStack
         key={item.id}
-        style={[
-          styles.messageContainer,
-          item.type === "user" ? styles.userMessageContainer : styles.aiMessageContainer,
-        ]}
+        style={{
+          ...styles.messageContainer,
+          ...(item.type === "user" ? styles.userMessageContainer : styles.aiMessageContainer),
+        }}
       >
         <Box style={styles.avatarContainer}>
           {item.type === "user" ? (
@@ -151,8 +146,12 @@ export default function ChatScreen() {
               <Ionicons name="person" size={24} color="white" />
             </Box>
           ) : (
-            <Box style={styles.aiAvatar}>
-              <Ionicons name="chatbubble-ellipses" size={24} color="white" />
+            <Box style={styles.avatarContainer}>
+              <Image
+                source={require("../../assets/images/bhunte.png")}
+                style={styles.aiAvatar}
+                alt="Bhunte logo"
+              />
             </Box>
           )}
         </Box>
@@ -181,9 +180,8 @@ export default function ChatScreen() {
     return (
       <Box className="mb-6">
         <HStack className="items-start">
-          {renderBotAvatar()}
           <Box className="bg-gray-100 p-4 rounded-2xl">
-            <Text className="text-gray-800">AI is typing...</Text>
+            <Text className="text-gray-800">Bhunte is typing...</Text>
           </Box>
         </HStack>
       </Box>
@@ -200,7 +198,7 @@ export default function ChatScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Chat AI</Text>
+          <Text style={styles.headerTitle}>Ask Bhunte</Text>
           <TouchableOpacity
             style={styles.historyButton}
             onPress={() => navigation.navigate("history")}
@@ -302,10 +300,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   aiAvatar: {
-    width: 40,
-    height: 40,
+    width: 45,
+    height: 45,
     borderRadius: 20,
-    backgroundColor: "#7c4dff",
     alignItems: "center",
     justifyContent: "center",
   },

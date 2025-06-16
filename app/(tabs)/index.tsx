@@ -1,13 +1,13 @@
+import { Link } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { VStack } from "@/components/ui/vstack";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { Pressable } from "@/components/ui/pressable";
-import { Icon } from "@/components/ui/icon";
 import { FontAwesome } from "@expo/vector-icons";
 import { ScrollView } from "@/components/ui/scroll-view";
 
-export default function TabOneScreen() {
+export default function HomeScreen() {
   return (
     <ScrollView className="flex-1 bg-background-0" contentContainerClassName="px-4 py-4 pb-8">
       {/* Header */}
@@ -15,6 +15,9 @@ export default function TabOneScreen() {
         <VStack>
           <Text className="text-2xl font-bold">Good morning!</Text>
           <Text className="text-typography-500">Welcome back, John</Text>
+          <Link href="/chat">
+            <Text>Chat with AI</Text>
+          </Link>
         </VStack>
         <Box className="bg-success-100 rounded-xl px-3 py-1">
           <Text className="text-success-900 font-bold text-sm">Active</Text>

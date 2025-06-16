@@ -6,8 +6,10 @@ import { Pressable } from "@/components/ui/pressable";
 import { Icon } from "@/components/ui/icon";
 import { FontAwesome } from "@expo/vector-icons";
 import { ScrollView } from "@/components/ui/scroll-view";
+import { useRouter } from "expo-router";
 
 export default function TabOneScreen() {
+  const router = useRouter();
   return (
     <ScrollView className="flex-1 bg-background-0" contentContainerClassName="px-4 py-4 pb-8">
       {/* Header */}
@@ -87,7 +89,7 @@ export default function TabOneScreen() {
       <Box className="bg-white rounded-xl p-4 mt-6 shadow-sm">
         <Text className="font-bold text-base mb-3">Quick Actions</Text>
         <VStack className="space-y-2">
-          <Pressable>
+          <Pressable onPress={() => router.push("/calender")}>
             {(pressableProps: { pressed: boolean }) => (
               <HStack
                 className={`items-center p-3 rounded-lg ${

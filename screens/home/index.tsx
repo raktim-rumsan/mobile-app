@@ -13,9 +13,10 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { FontAwesome } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  CalendarDaysIcon,
+  ChatBubbleLeftIcon,
   ClockIcon,
   CurrencyDollarIcon,
   GiftIcon,
@@ -135,7 +136,11 @@ export default function HomeScreen() {
       <Box className="rounded-xl p-2 mt-4">
         <Text className="font-bold text-base mb-3">Quick Actions</Text>
         <VStack className="space-y-2">
-          <Pressable>
+          <Pressable
+            onPress={() => {
+              router.push('/chat');
+            }}
+          >
             {(pressableProps: { pressed: boolean }) => (
               <HStack
                 className={`items-center border border-gray-200 p-3 rounded-lg ${
@@ -143,9 +148,9 @@ export default function HomeScreen() {
                 }`}
               >
                 <Box className="rounded-md mr-2">
-                  <CalendarDaysIcon className="text-primary-500" size={20} />
+                  <ChatBubbleLeftIcon className="text-primary-500" size={20} />
                 </Box>
-                <Text className="flex-1 font-medium">Request Time Off</Text>
+                <Text className="flex-1 font-medium">Ask Bhunte</Text>
                 <FontAwesome name="angle-right" size={18} color="#A0AEC0" />
               </HStack>
             )}

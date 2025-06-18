@@ -23,9 +23,6 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
 
-  // Check if the current route is the Receipts screen
-  // change it to multiple paths if needed using array
-  // e.g. const isReceiptScreen = ['/Receipts', '/Receipts/preview'].includes(pathname);
   const otherTabs: {
     path: string;
     title?: string;
@@ -37,7 +34,7 @@ export default function TabLayout() {
       title: 'Receipt Preview',
     },
     {
-      path: 'receipt/camera',
+      path: 'receipt/form',
       title: 'Receipt Form',
       headerShown: true,
     },
@@ -128,10 +125,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="receipt/form"
+          name="receipt/camera"
           options={{
             tabBarLabel: ({ color, focused }) => <Text />,
             headerShown: false,
+            tabBarStyle: { display: 'none' },
             tabBarIcon: ({ color, focused }) => (
               <View className="items-center justify-center">
                 <ReceiptRefundIcon
@@ -150,6 +148,7 @@ export default function TabLayout() {
           options={{
             title: 'Scan',
             headerShown: false,
+            tabBarStyle: { display: 'none' },
             tabBarIcon: ({ focused }) => (
               <View
                 className={`items-center justify-center ${

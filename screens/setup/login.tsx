@@ -1,17 +1,16 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Text } from '@/components/ui';
 import { useAlertPopup } from '@/context/AlertPopupProvider';
-import { useWallet } from '@/context/WalletContext';
+import { useApp } from '@/context/AppContext';
 import { getServerInfo, updateServerInfo } from '@/utils/storage.utils';
 import { Ionicons } from '@expo/vector-icons';
 import { RumsanClient } from '@rumsan/sdk/clients';
 import { Wallet } from 'ethers';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 export default function LoginScreen() {
-  const { wallet, setAccessToken, setClientId } = useWallet();
+  const { wallet, setAccessToken, setClientId } = useApp();
   const { showError, showInfo, showWarning } = useAlertPopup();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -81,12 +80,12 @@ export default function LoginScreen() {
   return (
     <>
       {wallet ? (
-        <ThemedView
+        <View
           className="flex-1 p-6 w-full self-center"
           style={{ justifyContent: 'center', alignItems: 'center' }}
         >
           {/* Centered logo */}
-          <ThemedView
+          <View
             style={{
               flex: 1,
               justifyContent: 'center',
@@ -101,7 +100,7 @@ export default function LoginScreen() {
               style={styles.logo}
               resizeMode="contain"
             />
-          </ThemedView>
+          </View>
           {/* Login button at bottom */}
           <Pressable
             style={({ pressed }) => [
@@ -115,14 +114,12 @@ export default function LoginScreen() {
             disabled={isLoading}
           >
             <Ionicons size={20} name="wallet" />
-            <ThemedText className="ml-4 text-black font-medium">
-              Unlock Wallet
-            </ThemedText>
+            <Text className="ml-4 text-black font-medium">Unlock Wallet</Text>
           </Pressable>
-        </ThemedView>
+        </View>
       ) : (
-        <ThemedView className="flex-1 justify-center items-center p-6">
-          <ThemedView className="w-full max-w-sm items-center">
+        <View className="flex-1 justify-center items-center p-6">
+          <View className="w-full max-w-sm items-center">
             <Pressable
               style={({ pressed }) => [
                 styles.button,
@@ -131,12 +128,10 @@ export default function LoginScreen() {
               onPress={() => router.push('/wallet')}
               disabled={isLoading}
             >
-              <ThemedText className="text-black font-medium">
-                Connect Wallet
-              </ThemedText>
+              <Text className="text-black font-medium">Connect Wallet</Text>
             </Pressable>
-          </ThemedView>
-        </ThemedView>
+          </View>
+        </View>
       )}
     </>
   );

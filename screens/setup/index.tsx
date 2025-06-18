@@ -12,19 +12,14 @@ import {
 import { useApp } from '@/context/AppContext';
 import { useGoogle } from '@/plugins/wallet-setup/gdrive/GoogleContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import React from 'react';
 import { Dimensions } from 'react-native';
 
 export default function LandingScreen() {
-  const { isAuthenticated, isLoading, error } = useGoogle();
+  const { login, isAuthenticated, isLoading, error } = useGoogle();
   const { wallet } = useApp();
   const screenWidth = Dimensions.get('window').width;
   const logoSize = Math.min(screenWidth * 0.5, 200); // Responsive logo size
-
-  const login = async () => {
-    router.push('/home');
-  };
 
   // Redirect to home if already authenticated
   React.useEffect(() => {

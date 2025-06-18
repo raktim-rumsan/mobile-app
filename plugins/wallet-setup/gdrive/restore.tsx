@@ -1,9 +1,6 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Text } from '@/components/ui';
 import { WALLET_INFO } from '@/constants/wallet';
-import { getEncryptedWalletFromBackup } from '@/screens/wallet-setup/gdrive/utils';
 import { renameObject } from '@/utils/gdrive.utils';
-import { Text } from '@gluestack-ui/themed';
 import { HDNodeWallet, Wallet } from 'ethers';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -13,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { getEncryptedWalletFromBackup } from './utils';
 
 export default function WalletRestore(props: {
   onWalletReady: (wallet: HDNodeWallet | Wallet) => void;
@@ -102,15 +100,15 @@ export default function WalletRestore(props: {
   }, [getEncryptedWallet]);
 
   return (
-    <ThemedView style={{ flex: 1, padding: 20 }}>
-      <ThemedText style={styles.heading}>Restore Existing Wallet</ThemedText>
-      <ThemedText className="mt-4 text-center">
+    <View style={{ flex: 1, padding: 20 }}>
+      <Text style={styles.heading}>Restore Existing Wallet</Text>
+      <Text className="mt-4 text-center">
         Existing backup wallet found. Let&#39;s restore it.
-      </ThemedText>
+      </Text>
       {address && (
-        <ThemedText className="m-2 text-center">
+        <Text className="m-2 text-center">
           Wallet Address: <span className="font-medium">{address}</span>
-        </ThemedText>
+        </Text>
       )}
       <TextInput
         style={styles.input}
@@ -120,14 +118,12 @@ export default function WalletRestore(props: {
         onChangeText={setPassword}
       />
       {passwordError ? (
-        <ThemedText style={{ color: 'red', marginTop: 5 }}>
-          {passwordError}
-        </ThemedText>
+        <Text style={{ color: 'red', marginTop: 5 }}>{passwordError}</Text>
       ) : (
-        <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
+        <Text style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
           The password will be used to decrypt your wallet. It is more than 4
           characters long.
-        </ThemedText>
+        </Text>
       )}
 
       <TouchableOpacity
@@ -142,7 +138,7 @@ export default function WalletRestore(props: {
         onPress={handleRestoreWallet}
         disabled={pendingMessage !== null || !password}
       >
-        <ThemedText
+        <Text
           style={styles.buttonText}
           className="text-white font-medium text-center"
         >
@@ -158,7 +154,7 @@ export default function WalletRestore(props: {
           ) : (
             <Text style={styles.buttonText}>Decrypt Wallet</Text>
           )}
-        </ThemedText>
+        </Text>
       </TouchableOpacity>
 
       {attemptCount > 2 && (
@@ -167,14 +163,14 @@ export default function WalletRestore(props: {
             style={[styles.createButton]}
             onPress={archiveWalletAndCreateNew}
           >
-            <ThemedText
+            <Text
               style={styles.buttonText}
               className="text-white font-medium text-center"
             >
               <Text style={styles.buttonText}>Create New Wallet</Text>
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
-          <ThemedText
+          <Text
             style={{ fontSize: 12, color: '#666' }}
             className="mt-1 text-center"
           >
@@ -183,10 +179,10 @@ export default function WalletRestore(props: {
               {WALLET_INFO.BACKUP_FILE_NAME}|{address}
             </Text>
             .
-          </ThemedText>
+          </Text>
         </>
       )}
-    </ThemedView>
+    </View>
   );
 }
 

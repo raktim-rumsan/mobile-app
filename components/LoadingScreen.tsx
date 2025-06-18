@@ -1,7 +1,6 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import React from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { Text } from './ui';
 
 type LoadingScreenProps = {
   message?: string;
@@ -11,10 +10,10 @@ export const LoadingScreen = ({
   message = 'Loading...',
 }: LoadingScreenProps) => {
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       <ActivityIndicator size="large" color="#4285F4" style={styles.spinner} />
-      {message && <ThemedText style={styles.message}>{message}</ThemedText>}
-    </ThemedView>
+      {message && <Text style={styles.message}>{message}</Text>}
+    </View>
   );
 };
 

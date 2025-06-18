@@ -1,5 +1,4 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Text } from '@/components/ui';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -7,7 +6,7 @@ export default function WalletSetupProgress(props: {
   progressLog: { title: string; isError?: boolean }[];
 }) {
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.contentContainer}>
         {props.progressLog.map((step, index) => (
           <View
@@ -19,7 +18,7 @@ export default function WalletSetupProgress(props: {
             }}
           >
             <View>
-              <ThemedText
+              <Text
                 style={
                   step.isError
                     ? { color: 'red', fontSize: 18 }
@@ -27,15 +26,13 @@ export default function WalletSetupProgress(props: {
                 }
               >
                 {step.isError ? '✗' : '✓'}
-              </ThemedText>
+              </Text>
             </View>
-            <ThemedText style={{ marginLeft: 8, fontSize: 16 }}>
-              {step.title}
-            </ThemedText>
+            <Text style={{ marginLeft: 8, fontSize: 16 }}>{step.title}</Text>
           </View>
         ))}
       </View>
-    </ThemedView>
+    </View>
   );
 }
 

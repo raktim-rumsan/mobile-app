@@ -3,12 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "tailwind.config": [
-        "./tailwind.config.js"
-      ]
+      "@/*": ["./*"],
+      "@rumsan/sdk/*": ["./rumsan/*"],
+      "tailwind.config": ["./tailwind.config.js"]
     }
   },
   "include": [

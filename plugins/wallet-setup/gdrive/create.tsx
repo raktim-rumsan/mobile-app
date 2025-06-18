@@ -1,7 +1,4 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { createAndBackupWallet } from '@/screens/wallet-setup/gdrive/utils';
-import { Text } from '@gluestack-ui/themed';
+import { Text } from '@/components/ui';
 import { HDNodeWallet } from 'ethers';
 import React, { useState } from 'react';
 import {
@@ -11,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { createAndBackupWallet } from './utils';
 
 export default function WalletCreate(props: {
   onWalletReady: (wallet: HDNodeWallet) => void;
@@ -38,14 +36,14 @@ export default function WalletCreate(props: {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 20 }}>
-      <ThemedText style={styles.heading}>Create New Wallet</ThemedText>
-      <ThemedText style={{ marginVertical: 10 }}>
+    <View style={{ flex: 1, padding: 20 }}>
+      <Text style={styles.heading}>Create New Wallet</Text>
+      <Text style={{ marginVertical: 10 }}>
         No wallet backups found. Let&#39;s create a new wallet and back it up to
         Google Drive.
-      </ThemedText>
+      </Text>
 
-      <ThemedText style={{ marginBottom: 5 }}>Password</ThemedText>
+      <Text style={{ marginBottom: 5 }}>Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Create a strong password"
@@ -54,14 +52,12 @@ export default function WalletCreate(props: {
         onChangeText={setPassword}
       />
       {passwordError ? (
-        <ThemedText style={{ color: 'red', marginTop: 5 }}>
-          {passwordError}
-        </ThemedText>
+        <Text style={{ color: 'red', marginTop: 5 }}>{passwordError}</Text>
       ) : (
-        <ThemedText style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
+        <Text style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
           This password will be used to encrypt your wallet. Make sure it&#39;s
           strong and you remember it.
-        </ThemedText>
+        </Text>
       )}
 
       <TouchableOpacity
@@ -69,7 +65,7 @@ export default function WalletCreate(props: {
         onPress={handleCreateWallet}
         disabled={creatingWallet}
       >
-        <ThemedText
+        <Text
           style={styles.buttonText}
           className="text-white font-medium text-center"
         >
@@ -85,9 +81,9 @@ export default function WalletCreate(props: {
           ) : (
             <Text style={styles.buttonText}>Create Wallet</Text>
           )}
-        </ThemedText>
+        </Text>
       </TouchableOpacity>
-    </ThemedView>
+    </View>
   );
 }
 

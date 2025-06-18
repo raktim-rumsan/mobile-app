@@ -44,7 +44,7 @@ export default function WalletSetupScreen(props: {
 
     const accessToken = await getAccessToken();
     if (!accessToken) {
-      router.replace('/landing');
+      router.replace('/');
       return false;
     }
     setAccessToken(accessToken);
@@ -52,7 +52,7 @@ export default function WalletSetupScreen(props: {
     // Check if the access token is valid
     const isValid = await isAccessTokenValid(accessToken);
     if (!isValid) {
-      router.replace('/landing');
+      router.replace('/');
       return false;
     }
 

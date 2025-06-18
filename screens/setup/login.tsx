@@ -109,7 +109,8 @@ export default function LoginScreen() {
               { marginBottom: 40 },
             ]}
             onPress={() => {
-              getAccessToken(wallet!);
+              router.push('/home');
+              //getAccessToken(wallet!);
             }}
             disabled={isLoading}
           >

@@ -12,6 +12,7 @@ import {
 import { useApp } from '@/context/AppContext';
 import { useGoogle } from '@/plugins/wallet-setup/gdrive/GoogleContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React from 'react';
 import { Dimensions } from 'react-native';
 
@@ -24,7 +25,7 @@ export default function LandingScreen() {
   // Redirect to home if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      //router.replace('/wallet');
+      router.replace('/wallet');
     }
   }, [isAuthenticated]);
 

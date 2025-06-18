@@ -176,6 +176,38 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="nfc"
+          options={{
+            title: 'Scan',
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
+            tabBarIcon: ({ focused }) => (
+              <View
+                className={`items-center justify-center ${
+                  Platform.OS === 'android' ? 'mb-[24px]' : 'mb-[34px]'
+                }`}
+              >
+                <View
+                  className="w-[64px] h-[64px] items-center justify-center rounded-[64px] border-[3px] translate-y-[-10px]"
+                  style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].tint,
+                    shadowColor: Colors[colorScheme ?? 'light'].tint,
+                    shadowOffset: { width: 4, height: 6 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 8,
+                    borderColor:
+                      Colors[colorScheme ?? 'light'].tabBarBackground,
+                  }}
+                >
+                  <QrCodeIcon size={36} color="#fff" />
+                </View>
+              </View>
+            ),
+            tabBarLabel: () => null, // Remove the title so only the icon shows
+          }}
+        />
+        <Tabs.Screen
           name="timeOff"
           options={{
             title: 'Calendar',

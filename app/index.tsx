@@ -1,5 +1,6 @@
-import LandingScreen from '@/screens/setup';
+import NfcScreen from '@/screens/nfc';
 
 export default function LandingPage() {
-  return <LandingScreen />;
+  return <NfcScreen/>
+  // return <LandingScreen />;
 }

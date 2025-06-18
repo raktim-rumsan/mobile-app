@@ -52,8 +52,8 @@
     "axios": "^1.10.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "date-fns": "^4.1.0",
-    "ethers": "^6.14.4",
     "dayjs": "^1.11.13",
+    "ethers": "^6.14.4",
     "expo": "~53.0.11",
     "expo-auth-session": "^6.2.0",
     "expo-blur": "^14.1.5",
@@ -75,6 +75,7 @@
     "react-native": "0.79.3",
     "react-native-css-interop": "^0.1.22",
     "react-native-heroicons": "^4.0.0",
+    "react-native-nfc-manager": "^3.16.1",
     "react-native-qrcode-svg": "^6.3.15",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
@@ -82,7 +83,8 @@
     "react-native-svg": "15.11.2",
     "react-native-ui-datepicker": "^3.1.2",
     "react-native-web": "~0.20.0",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "expo-dev-client": "~5.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

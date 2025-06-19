@@ -17,7 +17,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 
-export default function RequestLeaveStep2() {
+export default function TimeoffRequestItemized() {
   const navigation = useNavigation();
   useEffect(() => {
     navigation.setOptions({ title: 'Request Leave' });

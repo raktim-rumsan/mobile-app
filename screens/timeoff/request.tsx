@@ -1,10 +1,11 @@
-import { Button, ButtonText } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
+import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 
 import { Textarea, TextareaInput } from '@/components/ui/textarea';
 
+import DatePickerComponent from '@/components/DatePickerComponent';
 import { CalendarDaysIcon, CircleIcon, Icon } from '@/components/ui/icon';
 import {
   Radio,
@@ -13,7 +14,9 @@ import {
   RadioIndicator,
   RadioLabel,
 } from '@/components/ui/radio';
-import React, { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -24,19 +27,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DateType } from 'react-native-ui-datepicker';
-import DatePickerComponent from './DatePickerComponent';
-import dayjs from 'dayjs';
-import { useNavigation } from 'expo-router';
-import { useRouter } from 'expo-router';
 
-export default function Calendar() {
+export default function TimeoffRequest() {
   const [selectedStartDate, setSelectedStartDate] = useState<DateType>();
   const [selectedEndDate, setSelectedEndDate] = useState<DateType>();
   const [isStartPickerVisible, setStartPickerVisible] = useState(false);
   const [isEndPickerVisible, setEndPickerVisible] = useState(false);
 
-const navigation = useNavigation();
-const router = useRouter();
+  const navigation = useNavigation();
+  const router = useRouter();
   useEffect(() => {
     navigation.setOptions({ title: 'Request Leave' });
   }, [navigation]);
@@ -60,8 +59,8 @@ const router = useRouter();
                 <Text className="text-gray-600 font-bold">Leave Type</Text>
               </VStack>
               <VStack space="sm" className="mt-2">
-                  <Box className="border border-gray-300 rounded-md p-6 min-h-48 w-full sm:w-96">
-                    <RadioGroup className="flex flex-col gap-y-4">
+                <Box className="border border-gray-300 rounded-md p-6 min-h-48 w-full sm:w-96">
+                  <RadioGroup className="flex flex-col gap-y-4">
                     <Radio value="sick" size="lg" className="mb-4">
                       <RadioIndicator>
                         <RadioIcon as={CircleIcon} />
@@ -72,7 +71,9 @@ const router = useRouter();
                       <RadioIndicator>
                         <RadioIcon as={CircleIcon} />
                       </RadioIndicator>
-                      <RadioLabel className="text-md">Personal Leave</RadioLabel>
+                      <RadioLabel className="text-md">
+                        Personal Leave
+                      </RadioLabel>
                     </Radio>
                     <Radio value="vacation" size="lg">
                       <RadioIndicator>
@@ -95,10 +96,7 @@ const router = useRouter();
                     isDisabled={false}
                     className="w-full h-16"
                   >
-                    <TextareaInput
-                      placeholder="Your text goes here..."
-                     
-                    />
+                    <TextareaInput placeholder="Your text goes here..." />
                   </Textarea>
                 </Box>
               </VStack>
@@ -116,17 +114,15 @@ const router = useRouter();
                         {!isStartPickerVisible && (
                           <Text className="text-black">
                             {selectedStartDate
-                              ? (dayjs.isDayjs(selectedStartDate)
-                                  ? selectedStartDate.format('MMM DD, YYYY')
-                                  : new Date(selectedStartDate).toLocaleDateString(
-                                      'en-US',
-                                      {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: '2-digit',
-                                      }
-                                    )
-                                )
+                              ? dayjs.isDayjs(selectedStartDate)
+                                ? selectedStartDate.format('MMM DD, YYYY')
+                                : new Date(
+                                    selectedStartDate,
+                                  ).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: '2-digit',
+                                  })
                               : 'Pick a Start Date'}
                           </Text>
                         )}
@@ -154,17 +150,16 @@ const router = useRouter();
                         {!isEndPickerVisible && (
                           <Text className="text-black">
                             {selectedEndDate
-                              ? (dayjs.isDayjs(selectedEndDate)
-                                  ? selectedEndDate.format('MMM DD, YYYY')
-                                  : new Date(selectedEndDate).toLocaleDateString(
-                                      'en-US',
-                                      {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: '2-digit',
-                                      }
-                                    )
-                                )
+                              ? dayjs.isDayjs(selectedEndDate)
+                                ? selectedEndDate.format('MMM DD, YYYY')
+                                : new Date(selectedEndDate).toLocaleDateString(
+                                    'en-US',
+                                    {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: '2-digit',
+                                    },
+                                  )
                               : 'Pick an End Date'}
                           </Text>
                         )}
@@ -199,19 +194,18 @@ const router = useRouter();
                 className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md"
                 onPress={() => {
                   router.push({
-                    pathname: '/request-leave',
+                    pathname: '/timeoff/request-itemized',
                     params: {
                       selectedStartDate: selectedStartDate
-                        ? (dayjs.isDayjs(selectedStartDate)
-                            ? selectedStartDate.toISOString()
-                            : new Date(selectedStartDate).toISOString())
+                        ? dayjs.isDayjs(selectedStartDate)
+                          ? selectedStartDate.toISOString()
+                          : new Date(selectedStartDate).toISOString()
                         : '',
                       selectedEndDate: selectedEndDate
-                        ? (dayjs.isDayjs(selectedEndDate)
-                            ? selectedEndDate.toISOString()
-                            : new Date(selectedEndDate).toISOString())
+                        ? dayjs.isDayjs(selectedEndDate)
+                          ? selectedEndDate.toISOString()
+                          : new Date(selectedEndDate).toISOString()
                         : '',
-                     
                     },
                   });
                 }}
@@ -225,4 +219,3 @@ const router = useRouter();
     </SafeAreaView>
   );
 }
-

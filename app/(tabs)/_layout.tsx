@@ -176,9 +176,10 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="timeOff"
+          name="timeoff"
           options={{
-            title: 'Calendar',
+            title: 'TimeOff',
+            headerShown: false,
             tabBarLabel: ({ color, focused }) => <Text />,
             tabBarIcon: ({ color, focused }) => (
               <View className="items-center justify-center">

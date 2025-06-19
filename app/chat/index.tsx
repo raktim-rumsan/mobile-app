@@ -1,23 +1,24 @@
-import React, { useState, useRef, useEffect } from "react";
-import type { TextInputProps, StyleProp, TextStyle } from "react-native";
+import NfcReader from '@/components/nfc/nfc-reader';
+import { Box } from '@/components/ui/box';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { Ionicons } from '@expo/vector-icons';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import type { StyleProp, TextInputProps, TextStyle } from 'react-native';
 import {
   FlatList,
-  StatusBar,
-  StyleSheet,
+  Image,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  Image,
-} from "react-native";
-import { Box } from "@/components/ui/box";
-import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-import { Text } from "@/components/ui/text";
-import { Pressable } from "@/components/ui/pressable";
-import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Message = {
   id: string;
@@ -47,28 +48,28 @@ const Input = ({
 
 export default function ChatScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: "1",
-      type: "user",
-      message: "What is AI chat bot ?",
+      id: '1',
+      type: 'user',
+      message: 'What is AI chat bot ?',
     },
     {
-      id: "2",
-      type: "ai",
+      id: '2',
+      type: 'ai',
       message:
-        "An AI chatbot is a computer program designed to simulate human conversation through text or voice interactions.What sets it apart from traditional chatbots is its ability to understand and respond to user input in a natural, human-like way.",
+        'An AI chatbot is a computer program designed to simulate human conversation through text or voice interactions.What sets it apart from traditional chatbots is its ability to understand and respond to user input in a natural, human-like way.',
     },
     {
-      id: "3",
-      type: "user",
-      message: "How Does it Work?",
+      id: '3',
+      type: 'user',
+      message: 'How Does it Work?',
     },
     {
-      id: "4",
-      type: "ai",
+      id: '4',
+      type: 'ai',
       message:
         "User Input:\nYou type or speak a message.\nProcessing:\nThe chatbot's AI analyzes your message to understand its meaning.",
     },
@@ -86,18 +87,18 @@ export default function ChatScreen() {
   }, [messages]);
 
   const handleSend = () => {
-    if (message.trim() === "") return;
+    if (message.trim() === '') return;
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       message: message,
-      type: "user",
+      type: 'user',
       timestamp: new Date(),
     };
 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setMessage("");
+    setMessage('');
 
     // Show typing indicator
     setIsTyping(true);
@@ -107,7 +108,7 @@ export default function ChatScreen() {
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         message: getBotResponse(message),
-        type: "ai",
+        type: 'ai',
         timestamp: new Date(),
       };
       setMessages((prevMessages) => [...prevMessages, botResponse]);
@@ -118,14 +119,14 @@ export default function ChatScreen() {
   const getBotResponse = (userMessage: string): string => {
     const lowerCaseMessage = userMessage.toLowerCase();
 
-    if (lowerCaseMessage.includes("hello") || lowerCaseMessage.includes("hi")) {
-      return "Hello there! How can I assist you today?";
-    } else if (lowerCaseMessage.includes("help")) {
-      return "I can help you with information, answer questions, or just chat. What would you like to know?";
-    } else if (lowerCaseMessage.includes("thank")) {
+    if (lowerCaseMessage.includes('hello') || lowerCaseMessage.includes('hi')) {
+      return 'Hello there! How can I assist you today?';
+    } else if (lowerCaseMessage.includes('help')) {
+      return 'I can help you with information, answer questions, or just chat. What would you like to know?';
+    } else if (lowerCaseMessage.includes('thank')) {
       return "You're welcome! Is there anything else you'd like to know?";
-    } else if (lowerCaseMessage.includes("bye")) {
-      return "Goodbye! Have a great day!";
+    } else if (lowerCaseMessage.includes('bye')) {
+      return 'Goodbye! Have a great day!';
     } else {
       return "That's interesting. Can you tell me more or ask something else?";
     }
@@ -137,18 +138,20 @@ export default function ChatScreen() {
         key={item.id}
         style={{
           ...styles.messageContainer,
-          ...(item.type === "user" ? styles.userMessageContainer : styles.aiMessageContainer),
+          ...(item.type === 'user'
+            ? styles.userMessageContainer
+            : styles.aiMessageContainer),
         }}
       >
         <Box style={styles.avatarContainer}>
-          {item.type === "user" ? (
+          {item.type === 'user' ? (
             <Box style={styles.userAvatar}>
               <Ionicons name="person" size={24} color="white" />
             </Box>
           ) : (
             <Box style={styles.avatarContainer}>
               <Image
-                source={require("../../assets/images/bhunte.png")}
+                source={require('../../assets/images/bhunte.png')}
                 style={styles.aiAvatar}
                 alt="Bhunte logo"
               />
@@ -189,19 +192,28 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <NfcReader
+        onNfcScanned={(content) => {
+          setMessage(content);
+          handleSend();
+        }}
+      />
       <Box style={styles.container}>
         <StatusBar barStyle="dark-content" />
 
         {/* Header */}
         <HStack style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ask Bhunte</Text>
           <TouchableOpacity
             style={styles.historyButton}
-            onPress={() => navigation.navigate("history")}
+            onPress={() => navigation.navigate('history')}
           >
             <Ionicons name="time-outline" size={24} color="#000" />
           </TouchableOpacity>
@@ -209,9 +221,9 @@ export default function ChatScreen() {
 
         {/* Chat Messages */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="flex-1"
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <FlatList
             ref={flatListRef}
@@ -237,7 +249,11 @@ export default function ChatScreen() {
                 onSubmitEditing={handleSend}
               />
             </HStack>
-            <Pressable style={styles.sendButton} disabled={!message.trim()} onPress={handleSend}>
+            <Pressable
+              style={styles.sendButton}
+              disabled={!message.trim()}
+              onPress={handleSend}
+            >
               <Ionicons name="send" size={24} color="white" />
             </Pressable>
           </HStack>
@@ -250,23 +266,23 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   header: {
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: '#f0f0f0',
   },
   backButton: {
     padding: 4,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#111",
+    fontWeight: '600',
+    color: '#111',
   },
   historyButton: {
     padding: 4,
@@ -280,13 +296,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
-    alignItems: "flex-start",
+    alignItems: 'flex-start',
   },
   userMessageContainer: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: '#f8f9fa',
   },
   aiMessageContainer: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: '#f8f9fa',
   },
   avatarContainer: {
     marginRight: 12,
@@ -295,57 +311,57 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#4CAF50",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   aiAvatar: {
     width: 45,
     height: 45,
     borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   messageContent: {
     flex: 1,
   },
   messageText: {
     fontSize: 16,
-    color: "#333",
+    color: '#333',
     lineHeight: 24,
   },
   messageActions: {
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
     marginTop: 12,
-    width: "100%",
+    width: '100%',
   },
   copyButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   copyText: {
     marginLeft: 4,
-    color: "#888",
+    color: '#888',
     fontSize: 14,
   },
   reactionButtons: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   reactionButton: {
     marginLeft: 16,
     padding: 2,
   },
   inputContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    borderTopColor: '#f0f0f0',
   },
   inputWrapper: {
     flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
     borderRadius: 24,
     paddingHorizontal: 12,
     marginRight: 8,
@@ -365,8 +381,8 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#7c4dff",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#7c4dff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

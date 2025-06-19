@@ -155,7 +155,11 @@ export default function HomeScreen() {
               </HStack>
             )}
           </Pressable>
-          <Pressable>
+          <Pressable
+            onPress={() => {
+              router.push('/demo');
+            }}
+          >
             {(pressableProps: { pressed: boolean }) => (
               <HStack
                 className={`items-center border border-gray-200 p-3 mt-2 rounded-lg ${
@@ -165,7 +169,7 @@ export default function HomeScreen() {
                 <Box className="rounded-md mr-2">
                   <GiftIcon className="text-success-500" size={20} />
                 </Box>
-                <Text className="flex-1 font-medium">Redeem Rewards</Text>
+                <Text className="flex-1 font-medium">Demo</Text>
                 <FontAwesome name="angle-right" size={18} color="#A0AEC0" />
               </HStack>
             )}

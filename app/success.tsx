@@ -1,5 +1,5 @@
-import SuccessScreen from '@/screens/misc/success';
+import MessageScreen from '@/screens/misc/message';
 
 export default function SuccessPage() {
-  return <SuccessScreen />;
+  return <MessageScreen message="Success!" />;
 }

@@ -1,6 +1,6 @@
-import NfcScreen from '@/screens/nfc';
+import { Redirect } from 'expo-router';
 
 export default function LandingPage() {
-  return <NfcScreen/>
-  // return <LandingScreen />;
+  // Simply redirect to the tabs route
+  return <Redirect href="/(tabs)/home" />;
 }

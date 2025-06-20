@@ -92,7 +92,7 @@ export default function TimeoffRequestItemized() {
             <Text className="text-[1rem]">Cancel</Text>
           </Button>
           <Button className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md">
-            <Text className="text-[1rem]">Submit</Text>
+            <Text className="text-[1rem] text-white">Submit</Text>
           </Button>
         </HStack>
       </VStack>

@@ -1,96 +1,107 @@
+import { Text } from '@/components/ui';
+import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
-
-import { Box } from '@/components/ui/box';
+import { useTimeOffRequestList } from '@/queries/timeoff-req.query';
 import { Ionicons } from '@expo/vector-icons';
+import { format } from 'date-fns';
 import { useNavigation, useRouter } from 'expo-router';
-
-import { Text } from '@/components/ui';
+import { StatusBar } from 'expo-status-bar';
 import {
+  ActivityIndicator,
   ScrollView,
-  StatusBar,
   StyleSheet,
-  TouchableOpacity,
+  TouchableOpacity
 } from 'react-native';
 import { PlusCircleIcon } from 'react-native-heroicons/outline';
-import TimeoffDetails from './details';
-
-const leaveRequests = [
-  {
-    type: 'Sick Leave',
-    status: 'Pending',
-    dates: [
-      { date: '21 July, 2024', type: 'FULL DAY' },
-      { date: '22 July, 2024', type: '1ST HALF' },
-    ],
-    reason:
-      'This is a leave reason part. Jorem ipsum dolor sit amet, consectetur adipiscing elit',
-  },
-  {
-    type: 'Personal Leave',
-    status: 'Approved',
-    dates: [
-      { date: '21 July, 2024', type: 'FULL DAY' },
-      { date: '22 July, 2024', type: '1ST HALF' },
-    ],
-    reason:
-      'This is a leave reason part. Jorem ipsum dolor sit amet, consectetur adipiscing elit',
-  },
-  {
-    type: 'Sick Leave',
-    status: 'Pending',
-    dates: [
-      { date: '21 July, 2024', type: 'FULL DAY' },
-      { date: '22 July, 2024', type: '1ST HALF' },
-    ],
-    reason:
-      'This is a leave reason part. Jorem ipsum dolor sit amet, consectetur adipiscing elit',
-  },
-];
 
 export default function TimeoffScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+
+  const { data, isLoading, error } = useTimeOffRequestList({
+    pagination: { page: 1, limit: 20 },
+    filters: {},
+  });
+
+  const renderRequestItem = (request: any, index: number) => {
+    const dates = request.daysDetails
+      ? Object.entries(request.daysDetails).map(([date, detail]) => ({
+          date: format(new Date(date), 'dd MMMM, yyyy'),
+          type: (detail as any).timeOffDuration
+            ?.replace('_', ' ')
+            .replace('FIRST HALF', '1ST HALF')
+            .replace('SECOND HALF', '2ND HALF') || '',
+        }))
+      : [];
+
+       const isApproved = request.status?.toUpperCase() === 'APPROVED';
+  const statusColor = isApproved ? '#4CAF50' : '#FF5252';
+  const statusBgColor = isApproved ? '#E8F5E9' : '#FFEBEE';
+    return (
+      <TouchableOpacity
+        key={request.cuid || index}
+        onPress={() => router.push({ pathname: '/timeoff/[cuid]', params: { cuid: request.cuid } })}
+        activeOpacity={0.8}
+      >
+        <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-2">
+          <HStack className="justify-between items-center mb-2">
+            <Text size="lg" className="font-bold text-gray-800">
+              {request.type}
+            </Text>
+            <Box
+                className="px-3 py-1 rounded-full"
+                style={{ backgroundColor: statusBgColor }}
+              >
+          <Text style={{ color: statusColor}} className="font-semibold uppercase text-md">
+              {request.status}</Text>
+              </Box>
+          </HStack>
+          {dates.map((d, i) => (
+            <HStack key={i} className="items-center mb-1">
+              <Ionicons name="calendar-outline" size={16} color="#666" />
+              <Text className="text-gray-700 ml-1">
+                {d.date} {d.type}
+              </Text>
+            </HStack>
+          ))}
+          <Text className="text-gray-600" numberOfLines={1}>
+            {request.description}
+          </Text>
+        </Box>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <Box style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar />
       <HStack style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ask Bhunte</Text>
+        <Text style={styles.headerTitle}>Request TimeOff</Text>
         <TouchableOpacity
           style={styles.historyButton}
           onPress={() => router.push('/timeoff/request')}
         >
-          <PlusCircleIcon size={24} color="#000" style={{ marginLeft: 8 }} />
+          <HStack className="items-center">
+            <PlusCircleIcon size={24} color="#000" style={{ marginLeft: 8 }} />
+            <Text style={{ marginLeft: 6, fontSize: 16, color: '#000', fontWeight: '600' }}>
+              New Request
+            </Text>
+          </HStack>
         </TouchableOpacity>
       </HStack>
 
       <ScrollView className="flex-1 px-4 py-2">
         <VStack className="space-y-4">
-          {leaveRequests.map((request, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() =>
-                router.push({
-                  pathname: '/timeoff/details',
-                  params: {
-                    type: request.type,
-                    status: request.status,
-                    reason: request.reason,
-                    dates: JSON.stringify(request.dates),
-                  },
-                })
-              }
-              activeOpacity={0.8}
-            >
-              <TimeoffDetails {...request} />
-            </TouchableOpacity>
-          ))}
+          {isLoading && <ActivityIndicator />}
+          {error && <Text>Error loading leave requests</Text>}
+          {!isLoading && !error && data?.data?.length === 0 && (
+            <Text>No leave requests found.</Text>
+          )}
+          {data?.data?.map(renderRequestItem)}
         </VStack>
       </ScrollView>
     </Box>

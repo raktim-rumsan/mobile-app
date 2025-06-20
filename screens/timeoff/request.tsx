@@ -184,10 +184,11 @@ export default function TimeoffRequest() {
             </VStack>
             <HStack className="mt-4">
               <Button
-                variant="outline"
-                className="text-gray-200 py-3 flex-1 rounded-md"
-                style={{ marginRight: 12 }} // 12px spacing between buttons
-              >
+                         variant="outline"
+                         className="text-gray-200 py-3 flex-1 rounded-md"
+                         style={{ marginRight: 12 }}
+                         onPress={() => router.back()}
+                       >
                 <Text className="text-[1rem]">Cancel</Text>
               </Button>
               <Button
@@ -210,7 +211,7 @@ export default function TimeoffRequest() {
                   });
                 }}
               >
-                <Text className="text-[1rem]">Next</Text>
+                <Text className="text-[1rem] text-white">Next</Text>
               </Button>
             </HStack>
           </Box>

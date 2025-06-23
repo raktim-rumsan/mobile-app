@@ -1,5 +1,6 @@
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useApp } from '@/context/AppContext';
+import { useGoogle } from '@/plugins/wallet-setup/gdrive/GoogleContext';
 import { getBackupWalletInfo } from '@/plugins/wallet-setup/gdrive/utils';
 import { IWalletSetup } from '@/types/wallet-setup.interface';
 import {
@@ -14,6 +15,8 @@ import React, { useCallback } from 'react';
 export default function WalletSetupScreen(props: {
   WalletSetup: IWalletSetup;
 }) {
+  //TODO: Don't useGoogle here
+  const { logout } = useGoogle();
   const { WalletSetup } = props;
   const [progressLog, setProgressLog] = React.useState<
     { title: string; isError: boolean }[]
@@ -51,7 +54,10 @@ export default function WalletSetupScreen(props: {
 
     // Check if the access token is valid
     const isValid = await isAccessTokenValid(accessToken);
+    console.log('Access token valid:', isValid);
     if (!isValid) {
+      console.warn('Access token is invalid, logging out');
+      await logout();
       router.replace('/');
       return false;
     }

@@ -12,6 +12,10 @@ export class GdriveWalletSetup implements IWalletSetup {
   RestoreUI = WalletRestore;
   SetupUI = WalletSetupProgress;
 
+  logout = async () => {
+    await AsyncStorage.removeItem('@user');
+  };
+
   storeWallet = async (wallet: HDNodeWallet | Wallet) => {
     await AsyncStorage.setItem(
       this.localStorageKey,

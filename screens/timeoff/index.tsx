@@ -2,11 +2,13 @@ import { Text } from '@/components/ui';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
-import { useTimeOffRequestList } from '@/queries/timeoff-req.query';
+import { useTimeOffByUserId } from '@/queries/timeoff-req.query';
+import { getUserIdFromAccessToken } from '@/utils/storage.utils';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useNavigation, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -19,10 +21,18 @@ export default function TimeoffScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  const { data, isLoading, error } = useTimeOffRequestList({
-    pagination: { page: 1, limit: 20 },
-    filters: {},
-  });
+const [userId, setUserId] = useState<string | null>(null);
+
+useEffect(() => {
+  getUserIdFromAccessToken().then(setUserId);
+}, []);
+
+const { data, isLoading, error } = useTimeOffByUserId(userId ?? '', {
+  page: 1,
+  limit: 10,
+  sort: 'startDate',
+  order: 'desc',
+});
 
   const renderRequestItem = (request: any, index: number) => {
     const dates = request.daysDetails
@@ -102,10 +112,10 @@ export default function TimeoffScreen() {
         <VStack className="space-y-4">
           {isLoading && <ActivityIndicator />}
           {error && <Text>Error loading leave requests</Text>}
-          {!isLoading && !error && data?.data?.length === 0 && (
+          {!isLoading && !error && data?.length === 0 && (
             <Text>No leave requests found.</Text>
           )}
-          {data?.data?.map(renderRequestItem)}
+          {data?.map(renderRequestItem)}
         </VStack>
       </ScrollView>
     </Box>

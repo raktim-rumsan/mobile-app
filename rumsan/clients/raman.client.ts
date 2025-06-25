@@ -6,7 +6,7 @@ import { formatResponse } from '../utils';
 
 export class RamanClient {
   private _client: AxiosInstance;
-  private _prefix = 'timeoff-request';
+  private _prefix = 'timeoff';
 
   constructor(private apiClient: AxiosInstance) {
     this._client = apiClient;
@@ -42,7 +42,7 @@ export class RamanClient {
     return formatResponse<TimeOffRequest[]>(response);
   }
   async create(data: TimeOffRequest, config?: AxiosRequestConfig) {
-    const response = await this._client.post(`${this._prefix}`, data, config);
+    const response = await this._client.post(`${this._prefix}/request`, data, config);
     return formatResponse<TimeOffRequest>(response);
   }
 
@@ -51,4 +51,9 @@ export class RamanClient {
     return formatResponse<TimeOffRequest>(response);
   }
 
+   async getTimeOffByUserId(userId: string, config?: AxiosRequestConfig) {
+    // Calls /timeoff/users/:userId with query params
+    const response = await this._client.get(`${this._prefix}/users/${userId}`, config);
+    return response.data; // Assumes backend returns { data: TimeOffRequest[], meta: any }
+  }
 }

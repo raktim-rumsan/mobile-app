@@ -3,6 +3,7 @@ import React from 'react';
 
 export interface IWalletSetup {
   localStorageKey: string;
+  logout: () => Promise<void>;
   CreateUI: (props: {
     onWalletReady: (wallet: HDNodeWallet | Wallet) => void;
     accessToken: string;

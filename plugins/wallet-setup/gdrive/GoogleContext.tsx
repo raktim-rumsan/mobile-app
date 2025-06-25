@@ -4,6 +4,9 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+// Google Sign in EXPLAINED | React Native Tutorial | Expo | React
+// https://www.youtube.com/watch?v=u9I54N80oBo
+
 // IMPORTANT: Replace these with your Google OAuth credentials
 // To set up Google OAuth:
 // 1. Go to https://console.cloud.google.com/
@@ -64,7 +67,7 @@ export const GoogleProvider = ({ children }: { children: React.ReactNode }) => {
     androidClientId: ANDROID_CLIENT_ID,
     iosClientId: IOS_CLIENT_ID,
     webClientId: EXPO_CLIENT_ID,
-    clientId: EXPO_CLIENT_ID,
+    clientId: ANDROID_CLIENT_ID,
     scopes: [
       'openid',
       'email',
@@ -74,7 +77,7 @@ export const GoogleProvider = ({ children }: { children: React.ReactNode }) => {
       'https://www.googleapis.com/auth/drive.appdata',
     ],
     redirectUri: makeRedirectUri({
-      path: 'success?message=Please%20close%20this%20window%20to%20return%20to%20the%20app.',
+      path: 'success',
       // Remove "localhost" for production, use proxy: true for Expo Go
       // proxy: true,
       //      'http://localhost:8081/success?message=Please%20close%20this%20window%20to%20return%20to%20the%20app.',

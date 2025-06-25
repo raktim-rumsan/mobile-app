@@ -1,19 +1,3 @@
-import { Box } from '@/components/ui/box';
-import { Button } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-
-import { Textarea, TextareaInput } from '@/components/ui/textarea';
-
-import DatePickerComponent from '@/components/DatePickerComponent';
-import { CalendarDaysIcon, CircleIcon, Icon } from '@/components/ui/icon';
-import {
-  Radio,
-  RadioGroup,
-  RadioIcon,
-  RadioIndicator,
-  RadioLabel,
-} from '@/components/ui/radio';
 import dayjs from 'dayjs';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -26,7 +10,38 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import DatePickerComponent from '@/components/DatePickerComponent';
+import { Box } from '@/components/ui/box';
+import { Button } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { CalendarDaysIcon, CircleIcon, Icon } from '@/components/ui/icon';
+import {
+  Radio,
+  RadioGroup,
+  RadioIcon,
+  RadioIndicator,
+  RadioLabel,
+} from '@/components/ui/radio';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { VStack } from '@/components/ui/vstack';
+
+import { useLeaveRequest } from '@/context/TimeoffRequestContext';
+import { TimeOffType } from '@/rumsan/types/raman/enums';
 import { DateType } from 'react-native-ui-datepicker';
+
+const LEAVE_TYPES = [
+  { value: 'SICK', label: 'Sick Leave' },
+  { value: 'PERSONAL', label: 'Personal Leave' },
+  { value: 'OTHER', label: 'Vacation' },
+];
+
+const formatDate = (date: DateType | undefined) =>
+  date
+    ? dayjs.isDayjs(date)
+      ? date.format('MMM DD, YYYY')
+      : dayjs(date).format('MMM DD, YYYY')
+    : null;
 
 export default function TimeoffRequest() {
   const [selectedStartDate, setSelectedStartDate] = useState<DateType>();
@@ -34,14 +49,53 @@ export default function TimeoffRequest() {
   const [isStartPickerVisible, setStartPickerVisible] = useState(false);
   const [isEndPickerVisible, setEndPickerVisible] = useState(false);
 
+  const { leaveData, setLeaveData } = useLeaveRequest();
   const navigation = useNavigation();
   const router = useRouter();
+
   useEffect(() => {
     navigation.setOptions({ title: 'Request Leave' });
   }, [navigation]);
 
-  const toggleStartPicker = () => setStartPickerVisible(!isStartPickerVisible);
-  const toggleEndPicker = () => setEndPickerVisible(!isEndPickerVisible);
+  const handleDateChange = (
+    type: 'startDate' | 'endDate',
+    date: DateType,
+    setVisible: (v: boolean) => void,
+    setDate: (v: DateType) => void
+  ) => {
+    setDate(date);
+    setLeaveData((prev) => ({
+      ...prev,
+      [type]: new Date(dayjs(date).format('YYYY-MM-DD')),
+    }));
+    setVisible(false);
+  };
+
+  const renderDatePickerField = (
+    label: string,
+    selectedDate: DateType | undefined,
+    isVisible: boolean,
+    toggleVisible: () => void,
+    onDateChange: (date: DateType) => void
+  ) => (
+    <Box className="border border-gray-300 rounded-md p-4 bg-white mt-2">
+      <TouchableOpacity onPress={toggleVisible}>
+        <View className="flex-row justify-between items-center">
+          <Text className="text-black">
+            {formatDate(selectedDate) || label}
+          </Text>
+          <Icon as={CalendarDaysIcon} size="md" />
+        </View>
+      </TouchableOpacity>
+      {isVisible && (
+        <DatePickerComponent
+          visible={isVisible}
+          selectedDate={selectedDate}
+          onDateChange={onDateChange}
+        />
+      )}
+    </Box>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -49,174 +103,98 @@ export default function TimeoffRequest() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <Box className="px-4 py-4 flex-1">
             <VStack className="flex-1">
+              {/* Leave Type */}
               <VStack>
                 <Text className="text-gray-600 font-bold">Leave Type</Text>
-              </VStack>
-              <VStack space="sm" className="mt-2">
-                <Box className="border border-gray-300 rounded-md p-6 min-h-48 w-full sm:w-96">
-                  <RadioGroup className="flex flex-col gap-y-4">
-                    <Radio value="sick" size="lg" className="mb-4">
-                      <RadioIndicator>
-                        <RadioIcon as={CircleIcon} />
-                      </RadioIndicator>
-                      <RadioLabel className="text-md">Sick Leave</RadioLabel>
-                    </Radio>
-                    <Radio value="personal" size="lg" className="mb-4">
-                      <RadioIndicator>
-                        <RadioIcon as={CircleIcon} />
-                      </RadioIndicator>
-                      <RadioLabel className="text-md">
-                        Personal Leave
-                      </RadioLabel>
-                    </Radio>
-                    <Radio value="vacation" size="lg">
-                      <RadioIndicator>
-                        <RadioIcon as={CircleIcon} />
-                      </RadioIndicator>
-                      <RadioLabel className="text-md">Vacation</RadioLabel>
-                    </Radio>
+                <Box className="border border-gray-300 rounded-md p-6 mt-2">
+                  <RadioGroup
+                    className="flex flex-col gap-y-4"
+                    value={leaveData.type}
+                    onChange={(value) =>
+                      setLeaveData((prev) => ({
+                        ...prev,
+                        type: value.toUpperCase() as TimeOffType,
+                      }))
+                    }
+                  >
+                    {LEAVE_TYPES.map(({ value, label }) => (
+                      <Radio key={value} value={value} size="lg" className="mb-2">
+                        <RadioIndicator>
+                          <RadioIcon as={CircleIcon} />
+                        </RadioIndicator>
+                        <RadioLabel className="text-md">{label}</RadioLabel>
+                      </Radio>
+                    ))}
                   </RadioGroup>
                 </Box>
               </VStack>
+
+              {/* Description */}
               <VStack>
-                <Text className="text-gray-600 font-bold mt-4">
-                  Description
-                </Text>
+                <Text className="text-gray-600 font-bold mt-4">Description</Text>
                 <Box className="mt-2">
-                  <Textarea
-                    size="md"
-                    isReadOnly={false}
-                    isInvalid={false}
-                    isDisabled={false}
-                    className="w-full h-16"
-                  >
-                    <TextareaInput placeholder="Your text goes here..." />
+                  <Textarea size="md" className="w-full h-16">
+                    <TextareaInput
+                      placeholder="Your text goes here..."
+                      value={leaveData.description}
+                      onChangeText={(text) =>
+                        setLeaveData((prev) => ({ ...prev, description: text }))
+                      }
+                    />
                   </Textarea>
                 </Box>
               </VStack>
+
+              {/* Dates */}
               <VStack>
-                <Text className="text-gray-600 font-bold mt-4">
-                  Select Dates
-                </Text>
+                <Text className="text-gray-600 font-bold mt-4">Select Dates</Text>
                 <Text className="text-gray-500 mt-1">
                   Select the start and end dates for your leave
                 </Text>
-                <Box className="border border-gray-300 rounded-md p-4 bg-white mt-2">
-                  <TouchableOpacity onPress={toggleStartPicker}>
-                    <View className="flex-row justify-between items-center">
-                      <Box>
-                        {!isStartPickerVisible && (
-                          <Text className="text-black">
-                            {selectedStartDate
-                              ? dayjs.isDayjs(selectedStartDate)
-                                ? selectedStartDate.format('MMM DD, YYYY')
-                                : new Date(
-                                    selectedStartDate,
-                                  ).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: '2-digit',
-                                  })
-                              : 'Pick a Start Date'}
-                          </Text>
-                        )}
-                      </Box>
-                      {!isStartPickerVisible && (
-                        <Icon as={CalendarDaysIcon} size="md" />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                  {isStartPickerVisible && (
-                    <DatePickerComponent
-                      visible={isStartPickerVisible}
-                      selectedDate={selectedStartDate}
-                      onDateChange={(date) => {
-                        setSelectedStartDate(date);
-                        setStartPickerVisible(false);
-                      }}
-                    />
-                  )}
-                </Box>
-                <Box className="border border-gray-300 rounded-md p-4 bg-white mt-2">
-                  <TouchableOpacity onPress={toggleEndPicker}>
-                    <View className="flex-row justify-between items-center">
-                      <Box>
-                        {!isEndPickerVisible && (
-                          <Text className="text-black">
-                            {selectedEndDate
-                              ? dayjs.isDayjs(selectedEndDate)
-                                ? selectedEndDate.format('MMM DD, YYYY')
-                                : new Date(selectedEndDate).toLocaleDateString(
-                                    'en-US',
-                                    {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: '2-digit',
-                                    },
-                                  )
-                              : 'Pick an End Date'}
-                          </Text>
-                        )}
-                      </Box>
-                      {!isEndPickerVisible && (
-                        <Icon as={CalendarDaysIcon} size="md" />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                  {isEndPickerVisible && (
-                    <DatePickerComponent
-                      visible={isEndPickerVisible}
-                      selectedDate={selectedEndDate}
-                      onDateChange={(date) => {
-                        setSelectedEndDate(date);
-                        setEndPickerVisible(false);
-                      }}
-                    />
-                  )}
-                </Box>
+
+                {renderDatePickerField(
+                  'Pick a Start Date',
+                  selectedStartDate,
+                  isStartPickerVisible,
+                  () => setStartPickerVisible(!isStartPickerVisible),
+                  (date) =>
+                    handleDateChange('startDate', date, setStartPickerVisible, setSelectedStartDate)
+                )}
+
+                {renderDatePickerField(
+                  'Pick an End Date',
+                  selectedEndDate,
+                  isEndPickerVisible,
+                  () => setEndPickerVisible(!isEndPickerVisible),
+                  (date) =>
+                    handleDateChange('endDate', date, setEndPickerVisible, setSelectedEndDate)
+                )}
               </VStack>
+
+              {/* Buttons */}
+              <HStack className="mt-4">
+                <Button
+                  variant="outline"
+                  className="text-gray-200 py-3 flex-1 rounded-md mr-3"
+                  onPress={() => router.back()}
+                >
+                  <Text className="text-[1rem]">Cancel</Text>
+                </Button>
+                <Button
+                  className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md"
+                  onPress={() => router.push('/timeoff/request-itemized')}
+                >
+                  <Text className="text-[1rem] text-white">Next</Text>
+                </Button>
+              </HStack>
             </VStack>
-            <HStack className="mt-4">
-              <Button
-                         variant="outline"
-                         className="text-gray-200 py-3 flex-1 rounded-md"
-                         style={{ marginRight: 12 }}
-                         onPress={() => router.back()}
-                       >
-                <Text className="text-[1rem]">Cancel</Text>
-              </Button>
-              <Button
-                className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md"
-                onPress={() => {
-                  router.push({
-                    pathname: '/timeoff/request-itemized',
-                    params: {
-                      selectedStartDate: selectedStartDate
-                        ? dayjs.isDayjs(selectedStartDate)
-                          ? selectedStartDate.toISOString()
-                          : new Date(selectedStartDate).toISOString()
-                        : '',
-                      selectedEndDate: selectedEndDate
-                        ? dayjs.isDayjs(selectedEndDate)
-                          ? selectedEndDate.toISOString()
-                          : new Date(selectedEndDate).toISOString()
-                        : '',
-                    },
-                  });
-                }}
-              >
-                <Text className="text-[1rem] text-white">Next</Text>
-              </Button>
-            </HStack>
           </Box>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+

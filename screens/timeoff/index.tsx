@@ -39,38 +39,42 @@ export default function TimeoffScreen() {
   const statusColor = isApproved ? '#4CAF50' : '#FF5252';
   const statusBgColor = isApproved ? '#E8F5E9' : '#FFEBEE';
     return (
-      <TouchableOpacity
-        key={request.cuid || index}
-        onPress={() => router.push({ pathname: '/timeoff/[cuid]', params: { cuid: request.cuid } })}
-        activeOpacity={0.8}
-      >
-        <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-2">
-          <HStack className="justify-between items-center mb-2">
-            <Text size="lg" className="font-bold text-gray-800">
-              {request.type}
-            </Text>
-            <Box
-                className="px-3 py-1 rounded-full"
-                style={{ backgroundColor: statusBgColor }}
-              >
-          <Text style={{ color: statusColor}} className="font-semibold uppercase text-md">
-              {request.status}</Text>
-              </Box>
-          </HStack>
-          {dates.map((d, i) => (
-            <HStack key={i} className="items-center mb-1">
-              <Ionicons name="calendar-outline" size={16} color="#666" />
-              <Text className="text-gray-700 ml-1">
-                {d.date} {d.type}
-              </Text>
-            </HStack>
-          ))}
-          <Text className="text-gray-600" numberOfLines={1}>
-            {request.description}
+  <TouchableOpacity
+    key={request.cuid || index}
+    onPress={() => router.push({ pathname: '/timeoff/[cuid]', params: { cuid: request.cuid } })}
+    activeOpacity={0.8}
+  >
+    <Box className="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+      <HStack className="justify-between items-center mb-2">
+        <Text size="lg" className="font-bold text-gray-800">
+          {request.type}
+        </Text>
+        <Box
+          className="px-3 py-1 rounded-full"
+          style={{ backgroundColor: statusBgColor }}
+        >
+          <Text
+            style={{ color: statusColor }}
+            className="font-semibold uppercase text-md"
+          >
+            {request.status}
           </Text>
         </Box>
-      </TouchableOpacity>
-    );
+      </HStack>
+      {dates.map((d, i) => (
+        <HStack key={i} className="items-center mb-1">
+          <Ionicons name="calendar-outline" size={16} color="#666" />
+          <Text className="text-gray-700 ml-1">
+            {d.date} {d.type}
+          </Text>
+        </HStack>
+      ))}
+      <Text className="text-gray-600" numberOfLines={1}>
+        {request.description}
+      </Text>
+    </Box>
+  </TouchableOpacity>
+);
   };
 
   return (

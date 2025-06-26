@@ -44,8 +44,6 @@ const formatDate = (date: DateType | undefined) =>
     : null;
 
 export default function TimeoffRequest() {
-  const [selectedStartDate, setSelectedStartDate] = useState<DateType>();
-  const [selectedEndDate, setSelectedEndDate] = useState<DateType>();
   const [isStartPickerVisible, setStartPickerVisible] = useState(false);
   const [isEndPickerVisible, setEndPickerVisible] = useState(false);
 
@@ -58,18 +56,15 @@ export default function TimeoffRequest() {
   }, [navigation]);
 
   const handleDateChange = (
-    type: 'startDate' | 'endDate',
-    date: DateType,
-    setVisible: (v: boolean) => void,
-    setDate: (v: DateType) => void
-  ) => {
-    setDate(date);
-    setLeaveData((prev) => ({
-      ...prev,
-      [type]: new Date(dayjs(date).format('YYYY-MM-DD')),
-    }));
-    setVisible(false);
-  };
+  type: 'startDate' | 'endDate',
+  setVisible: (v: boolean) => void
+) => (date: DateType) => {
+  setLeaveData((prev) => ({
+    ...prev,
+    [type]: new Date(dayjs(date).format('YYYY-MM-DD')),
+  }));
+  setVisible(false);
+};
 
   const renderDatePickerField = (
     label: string,
@@ -157,20 +152,18 @@ export default function TimeoffRequest() {
 
                 {renderDatePickerField(
                   'Pick a Start Date',
-                  selectedStartDate,
+                  leaveData.startDate,
                   isStartPickerVisible,
                   () => setStartPickerVisible(!isStartPickerVisible),
-                  (date) =>
-                    handleDateChange('startDate', date, setStartPickerVisible, setSelectedStartDate)
+                  handleDateChange('startDate', setStartPickerVisible)
                 )}
 
                 {renderDatePickerField(
                   'Pick an End Date',
-                  selectedEndDate,
-                  isEndPickerVisible,
+                    leaveData.endDate,
+                 isEndPickerVisible,
                   () => setEndPickerVisible(!isEndPickerVisible),
-                  (date) =>
-                    handleDateChange('endDate', date, setEndPickerVisible, setSelectedEndDate)
+                   handleDateChange('endDate', setEndPickerVisible)
                 )}
               </VStack>
 

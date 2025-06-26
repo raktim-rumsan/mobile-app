@@ -57,20 +57,28 @@ export default function TimeoffRequestItemized() {
 
   const dateRange = startDateStr && endDateStr ? getDateRange(startDateStr, endDateStr) : [];
 
-  // Pre-fill daysDetails as an object with FULL_DAY for each date in range if empty
   useEffect(() => {
-    if (dateRange.length > 0) {
-      const filledDays: Record<string, { timeOffDuration: TimeOffDuration }> = {};
-      dateRange.forEach((dt) => {
-        const key = dt.format('YYYY-MM-DD');
-        filledDays[key] = typedLeaveData.daysDetails?.[key] || { timeOffDuration: 'FULL_DAY' };
-      });
-      setLeaveData((prev) => ({
-        ...prev,
-        daysDetails: filledDays,
-      }));
-    }
-  }, [dateRange, setLeaveData]);
+  if (dateRange.length > 0) {
+    const existingKeys = Object.keys(typedLeaveData.daysDetails || {});
+    const newKeys = dateRange.map((dt) => dt.format('YYYY-MM-DD'));
+
+    const isSame =
+      existingKeys.length === newKeys.length &&
+      existingKeys.every((key) => newKeys.includes(key));
+
+    if (isSame) return; 
+
+    const filledDays: Record<string, { timeOffDuration: TimeOffDuration }> = {};
+    dateRange.forEach((dt) => {
+      const key = dt.format('YYYY-MM-DD');
+      filledDays[key] =typedLeaveData.daysDetails?.[key] || { timeOffDuration: 'FULL_DAY' };
+    });
+    setLeaveData((prev) => ({
+      ...prev,
+      daysDetails: filledDays,
+    }));
+  }
+}, [startDateStr, endDateStr]);
 
   // Handler to update the daysDetails in context on user selection
   const handleDurationChange = (date: string, duration: TimeOffDuration) => {
@@ -153,9 +161,9 @@ export default function TimeoffRequestItemized() {
                     <SelectPortal>
                       <SelectBackdrop />
                       <SelectContent>
-                        <SelectItem label="First Half" value="FIRST_HALF" />
-                        <SelectItem label="Second Half" value="SECOND_HALF" />
-                        <SelectItem label="Full Day" value="FULL_DAY" />
+                        <SelectItem label="FIRST_HALF" value="FIRST_HALF" />
+                        <SelectItem label="SECOND_HALF" value="SECOND_HALF" />
+                        <SelectItem label="FULL_DAY" value="FULL_DAY" />
                       </SelectContent>
                     </SelectPortal>
                   </Select>

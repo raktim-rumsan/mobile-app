@@ -15,6 +15,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AlertPopupProvider } from '@/context/AlertPopupProvider';
 import { AppProvider } from '@/context/AppContext';
+import { AuthProvider } from '@/context/auth';
 import { CameraProvider } from '@/context/CameraContext';
 import { GoogleProvider } from '@/plugins/wallet-setup/gdrive/GoogleContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -79,20 +80,24 @@ function RootLayoutNav() {
   const queryClient = new QueryClient();
 
   return (
-    <GluestackUIProvider mode="light">
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <GoogleProvider>
-          <QueryClientProvider client={queryClient}>
-            <AppProvider>
-              <CameraProvider>
-                <AlertPopupProvider>
-                  <AppLayout />
-                </AlertPopupProvider>
-              </CameraProvider>
-            </AppProvider>
-          </QueryClientProvider>
-        </GoogleProvider>
-      </ThemeProvider>
-    </GluestackUIProvider>
+    <AuthProvider>
+      <GluestackUIProvider mode="light">
+        <ThemeProvider
+          value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+        >
+          <GoogleProvider>
+            <QueryClientProvider client={queryClient}>
+              <AppProvider>
+                <CameraProvider>
+                  <AlertPopupProvider>
+                    <AppLayout />
+                  </AlertPopupProvider>
+                </CameraProvider>
+              </AppProvider>
+            </QueryClientProvider>
+          </GoogleProvider>
+        </ThemeProvider>
+      </GluestackUIProvider>
+    </AuthProvider>
   );
 }

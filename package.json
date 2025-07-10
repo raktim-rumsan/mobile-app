@@ -78,6 +78,7 @@
     "react-native": "0.79.3",
     "react-native-css-interop": "^0.1.22",
     "react-native-heroicons": "^4.0.0",
+    "react-native-mime-types": "^2.5.0",
     "react-native-nfc-manager": "^3.16.1",
     "react-native-qrcode-svg": "^6.3.15",
     "react-native-reanimated": "~3.17.4",

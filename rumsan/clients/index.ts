@@ -1,6 +1,7 @@
 import { IRumsanClient } from '../types/rumsanClient.types';
 import { AppClient } from './app.client';
 import { AuthClient } from './auth.client';
+import { MiscClient } from './misc.client';
 import { RamanClient } from './raman.client';
 import { ReceiptClient } from './receipt.client';
 import { RoleClient } from './role.client';
@@ -109,6 +110,9 @@ export class RumsanClient implements IRumsanClient {
   }
   public get Receipt() {
     return new ReceiptClient(this.apiClient);
+  }
+  public get Misc() {
+    return new MiscClient(this.apiClient);
   }
 }
 

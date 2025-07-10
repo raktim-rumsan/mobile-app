@@ -1,3 +1,4 @@
+import { useSelectLookUp } from '@/app/hooks/select-lookup.hook';
 import { AppInput } from '@/components/AppInput';
 import { AppSelect } from '@/components/AppSelect';
 import { View } from '@/components/Themed';
@@ -15,10 +16,9 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from '@/components/ui/form-control';
-import { useApp } from '@/context/AppContext';
 import { useCamera } from '@/context/CameraContext';
 import { useAddInvoice } from '@/queries/receipt.query';
-import { InvoiceType } from '@/rumsan/types/raman/enums';
+import { Currency, InvoiceType } from '@/rumsan/types/raman/enums';
 import { getUserIdFromAccessToken } from '@/utils/storage.utils';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
@@ -28,27 +28,10 @@ import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 import mime from 'react-native-mime-types';
-import data from './data.json';
-
-const invoiceTypes = [
-  { label: 'VAT', value: InvoiceType.VAT },
-  { label: 'PAN', value: InvoiceType.PAN },
-  { label: 'Estimate', value: InvoiceType.ESTIMATE },
-  { label: 'Bank Transfer', value: InvoiceType.BANK_TRANSFER },
-  { label: 'Voucher', value: InvoiceType.VOUCHER },
-];
-
-const currencies = [
-  { label: 'USD ($)', value: 'usd' },
-  { label: 'EUR (€)', value: 'eur' },
-  { label: 'GBP (£)', value: 'gbp' },
-  { label: 'NPR (रू)', value: 'npr' },
-];
 
 export default function ReceiptForm() {
   const { photoUri } = useCamera();
   const router = useRouter();
-  const { wallet } = useApp();
 
   // Form state
   const [description, setDescription] = useState('');
@@ -57,14 +40,14 @@ export default function ReceiptForm() {
   const [invoiceType, setInvoiceType] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [currency, setCurrency] = useState('');
+  const [currency, setCurrency] = useState('NPR');
   const [amount, setAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null); // New error state
-  const [success, setSuccess] = useState<string | null>(null); // New success state
+  const [error, setError] = useState<string | null>(null); 
+  const [success, setSuccess] = useState<string | null>(null);
 
   const { mutate: addInvoice } = useAddInvoice();
-
+  const { categories, projects } = useSelectLookUp();
 
   const handleSubmit = async () => {
   setIsSubmitting(true);
@@ -111,11 +94,6 @@ export default function ReceiptForm() {
 
           // Append the blob as a file, mimicking web UI's File object
           formData.append('receipts', blob, fileName);
-        }
-
-        console.log('FormData entries:');
-        for (const [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
         }
       } catch (error) {
         console.error('Error processing receipt file:', error);
@@ -178,23 +156,26 @@ export default function ReceiptForm() {
         <VStack space="md" style={styles.form}>
           <HStack space="md">
             <FormControl className="flex w-[120px]">
-              <FormControlLabel>
-                <FormControlLabelText>Currency</FormControlLabelText>
-              </FormControlLabel>
-              <AppSelect
-                items={currencies}
-                selectedValue={currency}
-                onValueChange={setCurrency}
-                placeholder="Select"
-              />
-            </FormControl>
+  <FormControlLabel>
+    <FormControlLabelText>Currency</FormControlLabelText>
+  </FormControlLabel>
+  <AppSelect
+    items={Object.values(Currency).map((type) => ({
+      label: type,
+      value: type,
+    }))}
+    selectedValue={currency}
+    onValueChange={setCurrency}
+  />
+</FormControl>
 
             <FormControl className="flex flex-1">
               <FormControlLabel>
                 <FormControlLabelText>Amount</FormControlLabelText>
               </FormControlLabel>
               <AppInput
-                className="h-14"
+                className="py-2"
+                size="lg"
                 type="numeric"
                 keyboardType="numeric"
                 placeholder="0.00"
@@ -202,7 +183,6 @@ export default function ReceiptForm() {
                 inputFieldProps={{
                   onChangeText: (text: string) => {
                     const cleaned = text.replace(/[^0-9.]/g, '');
-                    console.log('Sanitized amount input:', cleaned);
                     setAmount(cleaned);
                   },
                 }}
@@ -290,7 +270,7 @@ export default function ReceiptForm() {
     <FormControlLabelText>Project</FormControlLabelText>
   </FormControlLabel>
   <AppSelect
-    items={data.projects.map((p: any) => ({
+    items={projects.map((p: any) => ({
       label: p.name,
       value: p.cuid,
     }))}
@@ -300,34 +280,35 @@ export default function ReceiptForm() {
   />
 </FormControl>
 
-          {/* Category */}
           <FormControl>
-            <FormControlLabel>
-              <FormControlLabelText>Category</FormControlLabelText>
-            </FormControlLabel>
-            <AppSelect
-              items={data.categories.map((c: any) => ({
-                label: c.name,
-                value: c.cuid,
-              }))}
-              selectedValue={category}
-              onValueChange={setCategory}
-              placeholder="Select category"
-            />
-          </FormControl>
+  <FormControlLabel>
+    <FormControlLabelText>Category</FormControlLabelText>
+  </FormControlLabel>
+  <AppSelect
+    items={categories.map((c: any) => ({
+      label: c.name,
+      value: c.cuid,
+    }))}
+    selectedValue={category}
+    onValueChange={setCategory}
+    placeholder="Select category"
+  />
+</FormControl>
 
-          {/* Invoice Type */}
           <FormControl>
-            <FormControlLabel>
-              <FormControlLabelText>Invoice Type</FormControlLabelText>
-            </FormControlLabel>
-            <AppSelect
-              items={invoiceTypes}
-              selectedValue={invoiceType}
-              onValueChange={setInvoiceType}
-              placeholder="Select invoice type"
-            />
-          </FormControl>
+  <FormControlLabel>
+    <FormControlLabelText>Invoice Type</FormControlLabelText>
+  </FormControlLabel>
+  <AppSelect
+    items={Object.values(InvoiceType).map((type) => ({
+      label: type,
+      value: type,
+    }))}
+    selectedValue={invoiceType}
+    onValueChange={setInvoiceType}
+    placeholder="Select invoice type"
+  />
+</FormControl>
 
           {/* Submit and Cancel Buttons */}
           <HStack space="md" className="m-auto mt-4">

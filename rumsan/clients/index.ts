@@ -2,6 +2,7 @@ import { IRumsanClient } from '../types/rumsanClient.types';
 import { AppClient } from './app.client';
 import { AuthClient } from './auth.client';
 import { RamanClient } from './raman.client';
+import { ReceiptClient } from './receipt.client';
 import { RoleClient } from './role.client';
 import { SettingsClient } from './setting.client';
 import { UserClient } from './user.client';
@@ -105,6 +106,9 @@ export class RumsanClient implements IRumsanClient {
 
   public get Raman() {
     return new RamanClient(this.apiClient);
+  }
+  public get Receipt() {
+    return new ReceiptClient(this.apiClient);
   }
 }
 

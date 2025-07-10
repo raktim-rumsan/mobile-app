@@ -40,3 +40,38 @@ export const TimeOffType = {
   COMPASSIONATE: 'COMPASSIONATE' as TimeOffType,
   OTHER: 'OTHER' as TimeOffType,
 };
+
+export type InvoiceType =
+  | 'VAT'
+  | 'PAN'
+  | 'ESTIMATE'
+  | 'BANK_TRANSFER'
+  | 'VOUCHER';
+export const InvoiceType = {
+  VAT: 'VAT' as InvoiceType,
+  PAN: 'PAN' as InvoiceType,
+  ESTIMATE: 'ESTIMATE' as InvoiceType,
+  BANK_TRANSFER: 'BANK_TRANSFER' as InvoiceType,
+  VOUCHER: 'VOUCHER' as InvoiceType,
+};
+
+export type InvoiceStatusType =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'REIMBURSED';
+export const InvoiceStatusType = {
+  PENDING: 'PENDING' as InvoiceStatusType,
+  APPROVED: 'APPROVED' as InvoiceStatusType,
+  REJECTED: 'REJECTED' as InvoiceStatusType,
+  REIMBURSED: 'REIMBURSED' as InvoiceStatusType,
+};
+
+export type Currency = 'NPR' | 'USD' | 'GBP' | 'EUR' | 'USDC';
+export const Currency = {
+  NPR: 'NPR' as Currency,
+  USD: 'USD' as Currency,
+  GBP: 'GBP' as Currency,
+  EUR: 'EUR' as Currency,
+  USDC: 'USDC' as Currency,
+};

@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -33,7 +34,7 @@ import { DateType } from 'react-native-ui-datepicker';
 const LEAVE_TYPES = [
   { value: 'SICK', label: 'Sick Leave' },
   { value: 'PERSONAL', label: 'Personal Leave' },
-  { value: 'OTHER', label: 'Vacation' },
+  { value: 'OTHER', label: 'Other' },
 ];
 
 const formatDate = (date: DateType | undefined) =>
@@ -178,7 +179,14 @@ export default function TimeoffRequest() {
                 </Button>
                 <Button
                   className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md"
-                  onPress={() => router.push('/timeoff/request-itemized')}
+                  
+                  onPress={() => {
+ if (!leaveData.description?.trim()) {
+  Alert.alert('Please enter a description for your leave.');
+  return;
+}
+  router.push('/timeoff/request-itemized');
+}}
                 >
                   <Text className="text-[1rem] text-white">Next</Text>
                 </Button>

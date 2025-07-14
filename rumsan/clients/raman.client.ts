@@ -56,4 +56,9 @@ export class RamanClient {
     const response = await this._client.get(`${this._prefix}/users/${userId}`, config);
     return response.data; // Assumes backend returns { data: TimeOffRequest[], meta: any }
   }
+
+  async delete(cuid: string, config?: AxiosRequestConfig) {
+    const response = await this._client.delete(`${this._prefix}/request/${cuid}`, config);
+    return response.data; 
+  }
 }

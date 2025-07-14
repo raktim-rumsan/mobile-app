@@ -54,7 +54,6 @@ export const useTimeOffRequestAdd = () => {
       mutationFn: async (payload: any) => {
          const serverInfo = await getServerInfo();
         const token = serverInfo?.accessToken;
-        console.log('useTimeOffRequestAdd payload', token);
         const client = await apiClient();             
         const { data } = await client.Raman.create(payload,{
           headers: {
@@ -111,7 +110,6 @@ export const useTimeOffByUserId = (
       queryFn: async () => {
         const serverInfo = await getServerInfo();
         const token = serverInfo?.accessToken;
-        console.log(token,'toekn')
         const client = await apiClient();
         const response = await client.Raman.getTimeOffByUserId(userId, {
           params: query,
@@ -125,5 +123,28 @@ export const useTimeOffByUserId = (
     },
     queryClient,
   );
+};
+
+
+export const useTimeoffRequestDelete = () => {
+  const { apiClient, queryClient } = useRemoteClient();
+
+
+  return useMutation({
+    mutationFn: async (cuid: string) => {
+      const serverInfo = await getServerInfo();
+      const token = serverInfo?.accessToken;
+      const client = await apiClient();
+      const res = await client.Raman.delete(cuid, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res?.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['delete_timeoffreq'] });
+    },
+  });
 };
 

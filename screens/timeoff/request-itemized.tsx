@@ -120,8 +120,8 @@ export default function TimeoffRequestItemized() {
 
   const handleSubmit = async () => {
     try {
-      const userId = 'j050larasfexkl6zannowu4v'; // Replace with actual userId from auth context
-      const payload = preparePayload(typedLeaveData, userId);
+   const userId = ""
+   const payload = preparePayload(typedLeaveData, userId);
       await addTimeOffRequest(payload);
 
       router.push('/TimeOff')

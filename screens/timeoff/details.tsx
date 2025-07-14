@@ -3,13 +3,31 @@ import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useTimeOffById } from '@/queries/timeoff-req.query';
+import { useTimeOffById, useTimeoffRequestDelete } from '@/queries/timeoff-req.query';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
-import { useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, SafeAreaView } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 
 const TimeoffDetails = () => {
+  const router = useRouter();
+  const { mutateAsync: deleteTimeOff } = useTimeoffRequestDelete();
+
+  const handleDelete = async (cuid: string) => {
+  try {
+    await deleteTimeOff(cuid);
+
+    Alert.alert('Leave Canceled', 'Your leave request has been canceled.');
+
+    setTimeout(() => {
+      router.push('/TimeOff');
+    }, 2000);
+  } catch (error) {
+    console.error('Error deleting time off request:', error);
+    Alert.alert('Error', 'Something went wrong while canceling.');
+  }
+};
+
   const { cuid } = useLocalSearchParams() as { cuid: string };
   const { data, isLoading, error } = useTimeOffById(cuid);
 
@@ -41,6 +59,9 @@ const TimeoffDetails = () => {
       .replace('FIRST HALF', '1ST HALF')
       .replace('SECOND HALF', '2ND HALF') || '',
   }));
+
+  
+
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -80,7 +101,7 @@ const TimeoffDetails = () => {
       variant="outline"
       className="border-red-500 rounded px-4 py-3"
       style={{ minHeight: 48, justifyContent: 'center' }} 
-      onPress={() => console.log('Cancel request')}
+      onPress={() => handleDelete(cuid)} 
     >
       <Text className="text-red-500" style={{ fontSize: 16, textAlign: 'center' }}>
         Cancel Leave Request

@@ -1,5 +1,6 @@
 import { STORAGE } from '@/constants/wallet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
 
 export async function getServerInfo(): Promise<{
   accessToken?: string | null;
@@ -63,4 +64,20 @@ export async function clearStoredAccessToken(): Promise<void> {
 export async function getStoredClientId(): Promise<string | null | undefined> {
   const serverInfo = await getServerInfo();
   return serverInfo ? serverInfo.clientId : undefined;
+}
+
+export async function getUserIdFromAccessToken(): Promise<string | null> {
+  const serverInfo = await getServerInfo();
+  const token = serverInfo?.accessToken;
+
+  if (!token) return null;
+
+  try {
+    const decoded: any = jwtDecode(token);
+    return decoded.cuid 
+
+  } catch (error) {
+    console.error('Failed to decode accessToken:', error);
+    return null;
+  }
 }

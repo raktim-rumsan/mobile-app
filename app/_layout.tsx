@@ -16,12 +16,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { AlertPopupProvider } from '@/context/AlertPopupProvider';
 import { AppProvider } from '@/context/AppContext';
 import { CameraProvider } from '@/context/CameraContext';
+import { LeaveProvider } from '@/context/TimeoffRequestContext';
 import { GoogleProvider } from '@/plugins/wallet-setup/gdrive/GoogleContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -86,7 +87,9 @@ function RootLayoutNav() {
             <AppProvider>
               <CameraProvider>
                 <AlertPopupProvider>
-                  <AppLayout />
+                  <LeaveProvider>
+                    <AppLayout />
+                  </LeaveProvider>
                 </AlertPopupProvider>
               </CameraProvider>
             </AppProvider>

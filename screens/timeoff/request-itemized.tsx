@@ -14,73 +14,163 @@ import {
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useLeaveRequest } from '@/context/TimeoffRequestContext';
+import { useTimeOffRequestAdd } from '@/queries/timeoff-req.query';
+import { TimeOffDuration } from '@/rumsan/types/raman/enums';
+import { CreateTimeOffRequest } from '@/rumsan/types/raman/timeOffRequest.type';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import utc from 'dayjs/plugin/utc';
+import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
+dayjs.extend(utc);
+dayjs.extend(isSameOrBefore);
 
 export default function TimeoffRequestItemized() {
   const navigation = useNavigation();
+  const router = useRouter();
+  const { leaveData, setLeaveData } = useLeaveRequest();
+
   useEffect(() => {
     navigation.setOptions({ title: 'Request Leave' });
   }, [navigation]);
 
-  const router = useRouter();
-  const { selectedStartDate, selectedEndDate } = useLocalSearchParams();
+  const typedLeaveData = leaveData as CreateTimeOffRequest;
 
-  const startDateStr = Array.isArray(selectedStartDate)
-    ? selectedStartDate[0]
-    : selectedStartDate;
-  const endDateStr = Array.isArray(selectedEndDate)
-    ? selectedEndDate[0]
-    : selectedEndDate;
+  const startDateStr = typeof typedLeaveData.startDate === 'string'
+    ? typedLeaveData.startDate
+    : typedLeaveData.startDate?.toISOString().slice(0, 10) || '';
+  const endDateStr = typeof typedLeaveData.endDate === 'string'
+    ? typedLeaveData.endDate
+    : typedLeaveData.endDate?.toISOString().slice(0, 10) || '';
 
   const getDateRange = (start: string, end: string) => {
-    const arr: Date[] = [];
-    let dt = new Date(start);
-    const endDt = new Date(end);
-    while (dt <= endDt) {
-      arr.push(new Date(dt));
-      dt.setDate(dt.getDate() + 1);
+    const arr: dayjs.Dayjs[] = [];
+    let dt = dayjs.utc(start);
+    const endDt = dayjs.utc(end);
+    while (dt.isSameOrBefore(endDt, 'day')) {
+      arr.push(dt);
+      dt = dt.add(1, 'day');
     }
     return arr;
   };
 
-  const dateRange =
-    startDateStr && endDateStr ? getDateRange(startDateStr, endDateStr) : [];
+  const dateRange = startDateStr && endDateStr ? getDateRange(startDateStr, endDateStr) : [];
+
+  useEffect(() => {
+  if (dateRange.length > 0) {
+    const existingKeys = Object.keys(typedLeaveData.daysDetails || {});
+    const newKeys = dateRange.map((dt) => dt.format('YYYY-MM-DD'));
+
+    const isSame =
+      existingKeys.length === newKeys.length &&
+      existingKeys.every((key) => newKeys.includes(key));
+
+    if (isSame) return; 
+
+    const filledDays: Record<string, { timeOffDuration: TimeOffDuration }> = {};
+    dateRange.forEach((dt) => {
+      const key = dt.format('YYYY-MM-DD');
+      filledDays[key] =typedLeaveData.daysDetails?.[key] || { timeOffDuration: 'FULL_DAY' };
+    });
+    setLeaveData((prev) => ({
+      ...prev,
+      daysDetails: filledDays,
+    }));
+  }
+}, [startDateStr, endDateStr]);
+
+  // Handler to update the daysDetails in context on user selection
+  const handleDurationChange = (date: string, duration: TimeOffDuration) => {
+    setLeaveData((prev) => ({
+      ...prev,
+      daysDetails: {
+        ...(prev.daysDetails || {}),
+        [date]: { timeOffDuration: duration },
+      },
+    }));
+  };
+
+  // Prepare payload for API
+  const preparePayload = (leaveData: CreateTimeOffRequest, userId: string) => {
+    // Calculate total days
+    const daysDetailsObj = leaveData.daysDetails || {};
+    const totalDays = Object.values(daysDetailsObj).reduce((sum, item: any) => {
+      if (item.timeOffDuration === 'FULL_DAY') return sum + 1;
+      if (item.timeOffDuration === 'FIRST_HALF' || item.timeOffDuration === 'SECOND_HALF') return sum + 0.5;
+      return sum;
+    }, 0);
+
+    return {
+      ...leaveData,
+      userId,
+      totalDays,
+      startDate: new Date(leaveData.startDate).toISOString(),
+      endDate: new Date(leaveData.endDate).toISOString(),
+      status: 'PENDING',
+      isPaid: false,
+      approvalChallenge: '',
+      approvalDetails: { isApproved: false, remarks: '', approvedBy: '' },
+      attachments: {},
+      extras: {},
+    };
+  };
+
+  const { mutateAsync: addTimeOffRequest } = useTimeOffRequestAdd();
+
+  const handleSubmit = async () => {
+    try {
+   const userId = ""
+   const payload = preparePayload(typedLeaveData, userId);
+      await addTimeOffRequest(payload);
+
+      router.push('/TimeOff')
+    } catch (error) {
+      console.error('Error submitting leave request:', error);
+    }
+  };
 
   return (
     <Box className="flex-1 bg-gray-50 px-4 py-4">
       <VStack className="flex-1">
-        <Text className="font-bold text-lg mb-4">Request Leave</Text>
+
         {dateRange.length === 0 ? (
           <Text className="text-gray-500 mb-4">No dates selected.</Text>
         ) : (
-          dateRange.map((date, idx) => (
-            <HStack
-              key={date.toISOString()}
-              className="bg-white rounded-md p-3 mb-3 items-center"
-            >
-              <Icon as={CalendarDaysIcon} size="md" className="mr-2" />
-              <Text className="flex-1 font-medium">
-                {date.toLocaleDateString('en-CA')}
-              </Text>
-              <Box className="flex-1">
-                <Select defaultValue="Full Day">
-                  <SelectTrigger variant="outline">
-                    <SelectInput />
-                    <SelectIcon />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      <SelectItem label="First Half" value="firstHalf" />
-                      <SelectItem label="Second Half" value="secondHalf" />
-                      <SelectItem label="Full Day" value="fullDay" />
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-              </Box>
-            </HStack>
-          ))
+          dateRange.map((dt) => {
+            const dateKey = dt.format('YYYY-MM-DD'); // YYYY-MM-DD
+            const currentDuration = typedLeaveData.daysDetails?.[dateKey]?.timeOffDuration || 'FULL_DAY';
+            return (
+              <HStack
+                key={dateKey}
+                className="bg-white rounded-md p-3 mb-3 items-center"
+              >
+                <Icon as={CalendarDaysIcon} size="md" className="mr-2" />
+                <Text className="flex-1 font-medium">{dateKey}</Text>
+                <Box className="flex-1">
+                  <Select
+                    defaultValue={currentDuration}
+                    onValueChange={(val) =>
+                      handleDurationChange(dateKey, val as TimeOffDuration)
+                    }
+                  >
+                    <SelectTrigger variant="outline">
+                      <SelectInput />
+                      <SelectIcon />
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectBackdrop />
+                      <SelectContent>
+                        <SelectItem label="FIRST_HALF" value="FIRST_HALF" />
+                        <SelectItem label="SECOND_HALF" value="SECOND_HALF" />
+                        <SelectItem label="FULL_DAY" value="FULL_DAY" />
+                      </SelectContent>
+                    </SelectPortal>
+                  </Select>
+                </Box>
+              </HStack>
+            );
+          })
         )}
         <HStack className="mt-4">
           <Button
@@ -91,7 +181,10 @@ export default function TimeoffRequestItemized() {
           >
             <Text className="text-[1rem]">Cancel</Text>
           </Button>
-          <Button className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md">
+          <Button
+            className="bg-blue-500 text-white font-bold py-3 flex-1 rounded-md"
+            onPress={handleSubmit}
+          >
             <Text className="text-[1rem] text-white">Submit</Text>
           </Button>
         </HStack>

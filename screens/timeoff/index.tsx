@@ -2,11 +2,13 @@ import { Text } from '@/components/ui';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
-import { useTimeOffRequestList } from '@/queries/timeoff-req.query';
+import { useTimeOffByUserId } from '@/queries/timeoff-req.query';
+import { getUserIdFromAccessToken } from '@/utils/storage.utils';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useNavigation, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -19,10 +21,18 @@ export default function TimeoffScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  const { data, isLoading, error } = useTimeOffRequestList({
-    pagination: { page: 1, limit: 20 },
-    filters: {},
-  });
+const [userId, setUserId] = useState<string | null>(null);
+
+useEffect(() => {
+  getUserIdFromAccessToken().then(setUserId);
+}, []);
+
+const { data, isLoading, error } = useTimeOffByUserId(userId ?? '', {
+  page: 1,
+  limit: 10,
+  sort: 'startDate',
+  order: 'desc',
+});
 
   const renderRequestItem = (request: any, index: number) => {
     const dates = request.daysDetails
@@ -39,38 +49,42 @@ export default function TimeoffScreen() {
   const statusColor = isApproved ? '#4CAF50' : '#FF5252';
   const statusBgColor = isApproved ? '#E8F5E9' : '#FFEBEE';
     return (
-      <TouchableOpacity
-        key={request.cuid || index}
-        onPress={() => router.push({ pathname: '/timeoff/[cuid]', params: { cuid: request.cuid } })}
-        activeOpacity={0.8}
-      >
-        <Box className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-2">
-          <HStack className="justify-between items-center mb-2">
-            <Text size="lg" className="font-bold text-gray-800">
-              {request.type}
-            </Text>
-            <Box
-                className="px-3 py-1 rounded-full"
-                style={{ backgroundColor: statusBgColor }}
-              >
-          <Text style={{ color: statusColor}} className="font-semibold uppercase text-md">
-              {request.status}</Text>
-              </Box>
-          </HStack>
-          {dates.map((d, i) => (
-            <HStack key={i} className="items-center mb-1">
-              <Ionicons name="calendar-outline" size={16} color="#666" />
-              <Text className="text-gray-700 ml-1">
-                {d.date} {d.type}
-              </Text>
-            </HStack>
-          ))}
-          <Text className="text-gray-600" numberOfLines={1}>
-            {request.description}
+  <TouchableOpacity
+    key={request.cuid || index}
+    onPress={() => router.push({ pathname: '/timeoff/[cuid]', params: { cuid: request.cuid } })}
+    activeOpacity={0.8}
+  >
+    <Box className="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+      <HStack className="justify-between items-center mb-2">
+        <Text size="lg" className="font-bold text-gray-800">
+          {request.type}
+        </Text>
+        <Box
+          className="px-3 py-1 rounded-full"
+          style={{ backgroundColor: statusBgColor }}
+        >
+          <Text
+            style={{ color: statusColor }}
+            className="font-semibold uppercase text-md"
+          >
+            {request.status}
           </Text>
         </Box>
-      </TouchableOpacity>
-    );
+      </HStack>
+      {dates.map((d, i) => (
+        <HStack key={i} className="items-center mb-1">
+          <Ionicons name="calendar-outline" size={16} color="#666" />
+          <Text className="text-gray-700 ml-1">
+            {d.date} {d.type}
+          </Text>
+        </HStack>
+      ))}
+      <Text className="text-gray-600" numberOfLines={1}>
+        {request.description}
+      </Text>
+    </Box>
+  </TouchableOpacity>
+);
   };
 
   return (
@@ -98,10 +112,10 @@ export default function TimeoffScreen() {
         <VStack className="space-y-4">
           {isLoading && <ActivityIndicator />}
           {error && <Text>Error loading leave requests</Text>}
-          {!isLoading && !error && data?.data?.length === 0 && (
+          {!isLoading && !error && data?.length === 0 && (
             <Text>No leave requests found.</Text>
           )}
-          {data?.data?.map(renderRequestItem)}
+          {data?.map(renderRequestItem)}
         </VStack>
       </ScrollView>
     </Box>

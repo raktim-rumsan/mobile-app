@@ -1,27 +1,27 @@
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const GOOGLE_REDIRECT_URI = `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/callback`;
 
 export async function POST(request: Request) {
   const body = await request.formData();
-  const code = body.get("code") as string;
+  const code = body.get('code') as string;
 
   if (!code) {
     return Response.json(
-      { error: "Missing required parameters" },
-      { status: 400 }
+      { error: 'Missing required parameters' },
+      { status: 400 },
     );
   }
 
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       redirect_uri: GOOGLE_REDIRECT_URI,
-      grant_type: "authorization_code",
+      grant_type: 'authorization_code',
       code: code,
     }),
   });
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
 
   if (!data.id_token) {
     return Response.json(
-      { error: "Missing required parameters" },
-      { status: 400 }
+      { error: 'Missing required parameters' },
+      { status: 400 },
     );
   }
 
@@ -40,8 +40,8 @@ export async function POST(request: Request) {
   // Create a new object without the exp property from the original token
   const { exp, ...userInfoWithoutExp } = userInfo as any;
 
-  const customToken = jwt.sign(userInfoWithoutExp, process.env.JWT_SECRET!, {
-    expiresIn: "1d", // Set our custom expiration time
+  const authToken = jwt.sign(userInfoWithoutExp, process.env.JWT_SECRET!, {
+    expiresIn: '1d', // Set our custom expiration time
   });
 
   if (data.error) {
@@ -54,9 +54,9 @@ export async function POST(request: Request) {
       },
       {
         status: 400,
-      }
+      },
     );
   }
 
-  return Response.json(customToken);
+  return Response.json({ data });
 }

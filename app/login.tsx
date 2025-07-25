@@ -1,5 +1,6 @@
-import LoginScreen from '@/screens/setup/login';
+import { Text } from '@/components/ui';
 
 export default function LoginPage() {
-  return <LoginScreen />;
+  return <Text>Login Screen</Text>;
+  // return <LoginScreen />;
 }

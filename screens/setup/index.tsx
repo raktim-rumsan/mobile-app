@@ -10,27 +10,28 @@ import {
   VStack,
 } from '@/components/ui';
 import { useApp } from '@/context/AppContext';
-import { useGoogle } from '@/plugins/wallet-setup/gdrive/GoogleContext';
+import { getWalletBackupProvider } from '@/plugins/wallet-setup/walletSetupFactory';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import React from 'react';
 import { Dimensions } from 'react-native';
+import { setup } from './setup';
 
 export default function LandingScreen() {
-  const { login, isAuthenticated, isLoading, error } = useGoogle();
+  const useWalletSetup = getWalletBackupProvider(setup);
+  const walletSetup = useWalletSetup();
   const { wallet } = useApp();
   const screenWidth = Dimensions.get('window').width;
   const logoSize = Math.min(screenWidth * 0.5, 200); // Responsive logo size
 
   // Redirect to home if already authenticated
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/wallet');
-    }
-  }, [isAuthenticated]);
+  // React.useEffect(() => {
+  //   if (isAuthenticated) {
+  //     router.replace('/wallet');
+  //   }
+  // }, [isAuthenticated]);
 
   return (
-    <LinearGradient colors={['#f0f4ff', '#eaf0ff']} style={{ flex: 1 }}>
+    <LinearGradient colors={['#333333', '#eaf0ff']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <VStack className="relative flex-1 min-h-screen justify-center items-center p-8">
           <Center className="w-full mb-12">
@@ -58,8 +59,8 @@ export default function LandingScreen() {
 
               {/* Google login button */}
               <Button
-                onPress={login}
-                isDisabled={isLoading}
+                onPress={walletSetup.signIn}
+                isDisabled={walletSetup.isLoading}
                 variant="solid"
                 size="xl"
                 className="w-full max-w-xs bg-primary-600 hover:bg-primary-700 text-white shadow-md rounded-xl mt-8"
@@ -72,15 +73,19 @@ export default function LandingScreen() {
                     alt="Google Icon"
                   />
                   <Text className="font-semibold text-white ml-2 text-sm">
-                    {isLoading ? 'Signing in...' : 'Sign in with Google'}
+                    {walletSetup.isLoading
+                      ? 'Signing in...'
+                      : 'Sign in with Google'}
                   </Text>
                 </HStack>
               </Button>
 
               {/* Error message */}
-              {error && (
+              {walletSetup.error && (
                 <Box className="mt-4 p-3 bg-red-50 rounded-md border border-red-200">
-                  <Text className="text-red-500 text-center">{error}</Text>
+                  <Text className="text-red-500 text-center">
+                    {walletSetup.error.message}
+                  </Text>
                 </Box>
               )}
             </Card>

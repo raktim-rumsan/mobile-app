@@ -17,7 +17,7 @@ import { AlertPopupProvider } from '@/context/AlertPopupProvider';
 import { AppProvider } from '@/context/AppContext';
 import { AuthProvider } from '@/context/auth';
 import { CameraProvider } from '@/context/CameraContext';
-import { GoogleProvider } from '@/plugins/wallet-setup/gdrive/GoogleContext';
+import { GoogleProvider } from '@/plugins/wallet-setup/google/GoogleContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export {

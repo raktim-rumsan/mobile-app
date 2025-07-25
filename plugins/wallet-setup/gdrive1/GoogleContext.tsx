@@ -56,7 +56,11 @@ type GoogleContextType = {
 const GoogleContext = createContext<GoogleContextType | null>(null);
 
 // Create the auth provider component
-export const GoogleProvider = ({ children }: { children: React.ReactNode }) => {
+export const GoogleProvider_expoAuth = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [user, setUser] = useState<User>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -186,7 +190,7 @@ export const GoogleProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Create a hook to use the auth context
-export const useGoogle = () => {
+export const useGoogle_expoAuth = () => {
   const context = useContext(GoogleContext);
   if (!context) {
     throw new Error('useGoogle must be used within an GoogleProvider');

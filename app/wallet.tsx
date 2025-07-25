@@ -1,9 +1,17 @@
-import { GdriveWalletSetup } from '@/plugins/wallet-setup/gdrive';
 import WalletSetupScreen from '@/screens/setup/wallet';
-import { useMemo } from 'react';
+import React from 'react';
 
 export default function SetupWalletPage() {
-  const WalletSetup = useMemo(() => new GdriveWalletSetup(), []);
+  // const WalletSetup = useMemo(() => new GdriveWalletSetup(), []);
+  // React.useEffect(() => {
+  //   const checkWallet = async () => {
+  //     const wallet = await setup.getWallet();
+  //     if (wallet) {
+  //       router.replace('/home');
+  //     }
+  //   };
+  //   checkWallet();
+  // }, []);
 
-  return <WalletSetupScreen WalletSetup={WalletSetup} />;
+  return <WalletSetupScreen />;
 }

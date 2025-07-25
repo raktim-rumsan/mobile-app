@@ -1,27 +1,16 @@
-import LoginForm from "@/components/LoginForm";
-import ProfileCard from "@/components/ProfileCard";
-import { ThemedView } from "@/components/ThemedView";
-import { useAuth } from "@/context/auth";
-import { ActivityIndicator } from "react-native";
+import LandingScreen from '@/screens/setup';
+import React from 'react';
 
-export default function HomeScreen() {
-  const { user, isLoading } = useAuth();
+export default function LandingPage() {
+  // React.useEffect(() => {
+  //   const checkWallet = async () => {
+  //     const wallet = await setup.getWallet();
+  //     if (wallet) {
+  //       router.replace('/home');
+  //     }
+  //   };
+  //   checkWallet();
+  // }, []);
 
-  if (isLoading) {
-    return (
-      <ThemedView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator />
-      </ThemedView>
-    );
-  }
-
-  if (!user) {
-    return <LoginForm />;
-  }
-
-  return (
-    <ThemedView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ProfileCard />
-    </ThemedView>
-  );
+  return <LandingScreen />;
 }

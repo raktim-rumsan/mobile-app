@@ -2,11 +2,10 @@
 import 'react-native-get-random-values';
 
 // Import the the ethers shims (**BEFORE** ethers)
+import { TLog } from '@/plugins/iHostService';
 import '@ethersproject/shims';
 import { format } from 'date-fns';
 import { ethers } from 'ethers';
-import { createOrGetBackupFolder } from '../gdrive1/utils';
-import { loggerType } from '../iWalletBackup';
 import {
   createFolder,
   downloadTextFile,
@@ -51,9 +50,9 @@ export const GoogleApis = {
 
   getBackupWalletInfo: async (
     accessToken: string,
-    log?: loggerType,
+    log?: TLog,
   ): Promise<{ folderId: string; walletFileId: string | null }> => {
-    const folderId = await createOrGetBackupFolder(accessToken, log);
+    const folderId = await GoogleApis.createOrGetBackupFolder(accessToken, log);
     const walletFileId = await findFirstObjectByName(
       accessToken,
       BACKUP_FILE_NAME,
@@ -72,8 +71,8 @@ export const GoogleApis = {
 
   createOrGetBackupFolder: async (
     accessToken: string,
-    log?: loggerType,
-  ): Promise<string | null> => {
+    log?: TLog,
+  ): Promise<string> => {
     const existingFolder = await findFirstObjectByName(
       accessToken,
       BACKUP_FOLDER_NAME,
@@ -101,7 +100,7 @@ export const GoogleApis = {
     accessToken: string,
     password: string,
     folderId: string,
-    log?: loggerType,
+    log?: TLog,
   ) => {
     // Encrypt the wallet
     log?.(`Creating and backing up wallet with password: ${password}`);
@@ -181,3 +180,21 @@ export const GoogleApis = {
     return newFileName;
   },
 };
+
+// export async function postWalletAddress(walletAddress: string) {
+//   try {
+//     // Replace with your actual API endpoint
+//     const response = await fetch('https://api.example.com/wallet', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({ address: walletAddress }),
+//     });
+
+//     return await response.json();
+//   } catch (error) {
+//     console.error('Error posting wallet address:', error);
+//     throw error;
+//   }
+// }

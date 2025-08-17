@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui';
-import { iWalletBackup } from '@/plugins/wallet-setup/iWalletBackup';
+import { iWalletPlugin } from '@/plugins/iWalletPlugin';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { setup } from './setup';
+import { hostService } from './hostService';
 
-export default function WalletCreateNew(props: { walletSetup: iWalletBackup }) {
+export default function WalletCreateNew(props: { walletSetup: iWalletPlugin }) {
   const [password, setPassword] = useState('11111111');
   const [passwordError, setPasswordError] = useState('');
   const [creatingWallet, setCreatingWallet] = useState(false);
@@ -47,8 +47,8 @@ export default function WalletCreateNew(props: { walletSetup: iWalletBackup }) {
       return;
     }
 
-    await setup.setWallet(wallet);
-    router.push('/login');
+    await hostService.setWallet(wallet);
+    router.push('/lock');
     setCreatingWallet(false);
   };
 

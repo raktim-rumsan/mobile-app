@@ -1,13 +1,13 @@
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useApp } from '@/context/AppContext';
-import { getWalletBackupProvider } from '@/plugins/wallet-setup/walletSetupFactory';
+import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
 import { SafeAreaView } from 'react-native';
 import WalletCreateNew from './create';
+import { hostService } from './hostService';
 import SetupProgress from './progress';
 import WalletRestore from './restore';
-import { setup } from './setup';
 
 export default function WalletSetupScreen() {
   const [progressLog, setProgressLog] = React.useState<
@@ -16,7 +16,7 @@ export default function WalletSetupScreen() {
   const [step, setStep] = React.useState('init');
   const { setWallet } = useApp();
 
-  const useWalletSetup = getWalletBackupProvider(setup);
+  const useWalletSetup = getWalletBackupProvider(hostService);
   const walletSetup = useWalletSetup();
 
   const addProgressLog = React.useCallback(
@@ -28,9 +28,10 @@ export default function WalletSetupScreen() {
   );
 
   const setupWallet = React.useCallback(async () => {
-    const wallet = await setup.getWallet();
+    const wallet = await hostService.getWallet('TODO_temp');
     if (wallet) {
-      router.push('/login');
+      setWallet(wallet);
+      router.push('/lock');
       return;
     }
 

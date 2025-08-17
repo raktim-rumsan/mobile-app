@@ -17,7 +17,6 @@ import { AlertPopupProvider } from '@/context/AlertPopupProvider';
 import { AppProvider } from '@/context/AppContext';
 import { AuthProvider } from '@/context/auth';
 import { CameraProvider } from '@/context/CameraContext';
-import { GoogleProvider } from '@/plugins/wallet-setup/google/GoogleContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export {
@@ -69,7 +68,7 @@ function RootLayoutNav() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="lock" options={{ headerShown: false }} />
         <Stack.Screen name="success" options={{ headerShown: false }} />
         <Stack.Screen name="wallet" options={{ headerShown: false }} />
         <Stack.Screen name="chat" options={{ headerShown: false }} />
@@ -85,17 +84,15 @@ function RootLayoutNav() {
         <ThemeProvider
           value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-          <GoogleProvider>
-            <QueryClientProvider client={queryClient}>
-              <AppProvider>
-                <CameraProvider>
-                  <AlertPopupProvider>
-                    <AppLayout />
-                  </AlertPopupProvider>
-                </CameraProvider>
-              </AppProvider>
-            </QueryClientProvider>
-          </GoogleProvider>
+          <QueryClientProvider client={queryClient}>
+            <AppProvider>
+              <CameraProvider>
+                <AlertPopupProvider>
+                  <AppLayout />
+                </AlertPopupProvider>
+              </CameraProvider>
+            </AppProvider>
+          </QueryClientProvider>
         </ThemeProvider>
       </GluestackUIProvider>
     </AuthProvider>

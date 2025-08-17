@@ -10,18 +10,19 @@ import {
   VStack,
 } from '@/components/ui';
 import { useApp } from '@/context/AppContext';
-import { getWalletBackupProvider } from '@/plugins/wallet-setup/walletSetupFactory';
+import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions } from 'react-native';
-import { setup } from './setup';
+import { hostService } from './hostService';
 
 export default function LandingScreen() {
-  const useWalletSetup = getWalletBackupProvider(setup);
+  const useWalletSetup = getWalletBackupProvider(hostService);
   const walletSetup = useWalletSetup();
   const { wallet } = useApp();
   const screenWidth = Dimensions.get('window').width;
   const logoSize = Math.min(screenWidth * 0.5, 200); // Responsive logo size
+  console.log('test');
 
   // Redirect to home if already authenticated
   // React.useEffect(() => {

@@ -16,12 +16,14 @@ import { View } from '@/components/Themed';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useApp } from '@/context/AppContext';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
+  const { isLocked } = useApp();
 
   const otherTabs: {
     path: string;
@@ -83,7 +85,7 @@ export default function TabLayout() {
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           tabBarInactiveTintColor:
             Colors[colorScheme ?? 'light'].tabIconDefault,
-          tabBarStyle,
+          tabBarStyle: isLocked ? { display: 'none' } : tabBarStyle,
           headerShown:
             hiddenHeaders.includes(`/${route.name}`) ||
             useClientOnlyValue(false, true),
@@ -220,7 +222,11 @@ export default function TabLayout() {
               href: null,
               title: tab.title ? tab.title : tab.path,
               headerShown: tab.headerShown ?? false,
-              tabBarStyle: tab.footerShown ? tabBarStyle : { display: 'none' },
+              tabBarStyle: isLocked
+                ? { display: 'none' }
+                : tab.footerShown
+                ? tabBarStyle
+                : { display: 'none' },
               headerRight: tab.headerShown
                 ? () => <HeaderCloseButton />
                 : undefined,

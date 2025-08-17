@@ -1,17 +1,14 @@
 import { HDNodeWallet } from 'ethers';
+import { TLog } from './iHostService';
 
-export type loggerType = (message: string, isError?: boolean) => void;
-
-export interface iWalletBackup {
+export interface iWalletPlugin {
   signIn: () => Promise<void>;
   signOut: () => void;
-  getWalletBackupData: (options?: {
-    log?: loggerType;
-  }) => Promise<string | null>;
+  getWalletBackupData: (options?: { log?: TLog }) => Promise<string | null>;
   createAndBackupWallet: (
     password: string,
     options?: {
-      log: loggerType;
+      log: TLog;
     },
   ) => Promise<HDNodeWallet | undefined>;
   getEncryptedWalletFromBackup: () => Promise<{

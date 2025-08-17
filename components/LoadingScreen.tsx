@@ -1,6 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { Text } from './ui';
+import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import { Image, Text } from './ui';
 
 type LoadingScreenProps = {
   message?: string;
@@ -9,27 +9,28 @@ type LoadingScreenProps = {
 export const LoadingScreen = ({
   message = 'Loading...',
 }: LoadingScreenProps) => {
+  const theme = useColorScheme();
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#4285F4" style={styles.spinner} />
-      {message && <Text style={styles.message}>{message}</Text>}
+    <View className="flex-1 justify-start items-center">
+      <View className="items-center mt-80">
+        <Image
+          source={
+            theme === 'dark'
+              ? require('@/assets/images/icon-white.png')
+              : require('@/assets/images/icon-white.png')
+          }
+          className="h-48 w-48"
+          style={{
+            width: 600,
+            height: 600,
+            resizeMode: 'contain',
+          }}
+        />
+      </View>
+      <View className="items-center mt-auto mb-60">
+        <ActivityIndicator size="large" color="#4285F4" />
+        {message && <Text className="mt-4 text-center">{message}</Text>}
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  spinner: {
-    marginBottom: 12,
-  },
-  message: {
-    marginTop: 10,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-});

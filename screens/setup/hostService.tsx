@@ -1,38 +1,39 @@
-import { iWalletSetup } from '@/plugins/wallet-setup/iWalletSetup';
+import { iHostService } from '@/plugins/iHostService';
 import storageUtil from '@/utils/store.utils';
 import { HDNodeWallet, Mnemonic, Wallet } from 'ethers';
 import { router } from 'expo-router';
 
-export const setup: iWalletSetup = {
+export const hostService: iHostService = {
   storeData: async (
     name: string,
     value: Record<string, any> | string,
-    prefix?: string,
+    prefix: string,
   ) => {
-    prefix = prefix ? `backup_${prefix}_` : 'backup_';
-    await storageUtil.setItem(`${prefix}${name}`, JSON.stringify(value));
+    await storageUtil.setItem(`${prefix}_${name}`, JSON.stringify(value));
   },
-  getData: async (key: string, prefix?: string) => {
-    prefix = prefix ? `backup_${prefix}_` : 'backup_';
-    const data = (await storageUtil.getItem(`${prefix}${key}`)) || '{}';
+  getData: async (name: string, prefix: string) => {
+    const data = (await storageUtil.getItem(`${prefix}_${name}`)) || '{}';
     return JSON.parse(data);
   },
-  removeData: async (key: string, prefix?: string) => {
-    prefix = prefix ? `backup_${prefix}_` : 'backup_';
-    await storageUtil.setItem(`${prefix}${key}`, '');
+  removeData: async (name: string, prefix: string) => {
+    await storageUtil.setItem(`${prefix}_${name}`, '');
   },
   navigateToWalletSetup: () => {
     router.push('/wallet');
   },
-  getWallet: async () => {
+  getWallet: async (passCode: string) => {
     const walletData = await storageUtil.getItem('wallet');
     if (!walletData) return null;
 
-    const { privateKey, mnemonic } = JSON.parse(walletData);
-    return {
-      wallet: new Wallet(privateKey),
-      mnemonic: mnemonic ? (mnemonic as Mnemonic) : undefined,
-    };
+    const { privateKey } = JSON.parse(walletData);
+    return new Wallet(privateKey);
+  },
+  getMnemonic: async (passCode: string) => {
+    const walletData = await storageUtil.getItem('wallet');
+    if (!walletData) return null;
+
+    const { mnemonic } = JSON.parse(walletData);
+    return mnemonic ? (mnemonic as Mnemonic) : null;
   },
   setWallet: async (wallet: HDNodeWallet | Wallet) => {
     await storageUtil.setItem(

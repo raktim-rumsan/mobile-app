@@ -1,4 +1,6 @@
 // hooks/useGoogleDriveSetup.ts
+import { iHostService, TLog } from '@/plugins/iHostService';
+import { iWalletPlugin } from '@/plugins/iWalletPlugin';
 import { AuthUser } from '@/utils/middleware';
 import {
   AuthError,
@@ -8,8 +10,6 @@ import {
   useAuthRequest,
 } from 'expo-auth-session';
 import React, { useState } from 'react';
-import { iWalletBackup, loggerType } from '../iWalletBackup';
-import { iWalletSetup } from '../iWalletSetup';
 import { GoogleApis } from './api.google';
 
 const discovery = {
@@ -29,7 +29,7 @@ const config: AuthRequestConfig = {
   redirectUri: makeRedirectUri(),
 };
 
-export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
+export function useGoogleDriveSetup(setup: iHostService): iWalletPlugin {
   const [user, setUser] = React.useState<AuthUser | null>(null);
   const [request, response, promptAsync] = useAuthRequest(config, discovery);
   const [authToken, setAuthTokenState] = useState<string | null>(null);
@@ -37,6 +37,17 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
   const [folderId, setFolderId] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const storeData = async (
+    name: string,
+    value: Record<string, any> | string,
+  ) => {
+    await setup.storeData(name, value, 'gDrive');
+  };
+
+  const getData = async (name: string) => {
+    return await setup.getData(name, 'gDrive');
+  };
 
   const signIn = async () => {
     try {
@@ -51,7 +62,7 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
         const { code } = result.params;
 
         const authData = await GoogleApis.getJwtToken(code);
-        await setup.storeData('authData', authData);
+        await storeData('authData', authData);
         // const wallet = Wallet.createRandom();
         // setup.setWallet(wallet);
         setup.navigateToWalletSetup();
@@ -66,10 +77,10 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
   };
 
   const getWalletBackupData = async (options?: {
-    log?: loggerType;
+    log?: TLog;
   }): Promise<string | null> => {
     try {
-      const authData = await setup.getData('authData');
+      const authData = await getData('authData');
       if (!authData || !authData.access_token) {
         throw new Error('No access token found. Please sign in first.');
       }
@@ -97,11 +108,11 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
   const createAndBackupWallet = async (
     password: string,
     options?: {
-      log: loggerType;
+      log: TLog;
     },
   ) => {
     options?.log?.(`Creating and backing up wallet with password: ${password}`);
-    const authData = await setup.getData('authData');
+    const authData = await getData('authData');
 
     if (!authData || !authData.access_token) {
       throw new Error('No access token found. Please sign in first.');
@@ -123,7 +134,7 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
   };
 
   const getEncryptedWalletFromBackup = async () => {
-    const authData = await setup.getData('authData');
+    const authData = await getData('authData');
 
     if (!authData || !authData.access_token) {
       throw new Error('No access token found. Please sign in first.');
@@ -138,7 +149,7 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
   };
 
   const archiveEncryptedWallet = async (archiveName: string) => {
-    const authData = await setup.getData('authData');
+    const authData = await getData('authData');
 
     if (!authData || !authData.access_token) {
       throw new Error('No access token found. Please sign in first.');
@@ -162,7 +173,7 @@ export function useGoogleDriveSetup(setup: iWalletSetup): iWalletBackup {
   };
 
   const getAuthToken = async () => {
-    const authData = await setup.getData('authData');
+    const authData = await getData('authData');
     return authData?.access_token || null;
   };
 

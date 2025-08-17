@@ -1,6 +1,6 @@
+import { TLog } from '@/plugins/iHostService';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
-import { loggerType } from '../iWalletBackup';
 
 // Google Drive API base URL
 const GOOGLE_API_URL = 'https://www.googleapis.com';
@@ -390,7 +390,7 @@ export const findFirstObjectByName = async (
   options: {
     parentFolderId?: string;
     isFolder?: boolean;
-    log?: loggerType;
+    log?: TLog;
   } = { isFolder: false },
 ): Promise<string | null> => {
   const query = `name='${objectName}' and trashed=false${

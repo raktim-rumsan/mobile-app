@@ -26,7 +26,6 @@ import {
 import QRCode from 'react-native-qrcode-svg';
 
 export default function HomeScreen() {
-  // State to track which card's info is being shown
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [currentInfoContent, setCurrentInfoContent] = useState({
     title: '',

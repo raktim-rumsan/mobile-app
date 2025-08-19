@@ -1,5 +1,5 @@
-import { iHostService } from '@/plugins/iHostService';
-import storageUtil from '@/utils/store.utils';
+import { iHostService } from '@/core/types/iHostService';
+import storageUtil from '@/core/utils/store.utils';
 import { HDNodeWallet, Mnemonic, Wallet } from 'ethers';
 import { router } from 'expo-router';
 

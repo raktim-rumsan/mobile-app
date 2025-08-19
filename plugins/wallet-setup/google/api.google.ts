@@ -2,7 +2,7 @@
 import 'react-native-get-random-values';
 
 // Import the the ethers shims (**BEFORE** ethers)
-import { TLog } from '@/plugins/iHostService';
+import { TLog } from '@/core/types/iHostService';
 import '@ethersproject/shims';
 import { format } from 'date-fns';
 import { ethers } from 'ethers';

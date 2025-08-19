@@ -1,4 +1,4 @@
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/core/context/auth';
 import { Image, useColorScheme, View } from 'react-native';
 import SignInWithGoogleButton from './SignInWithGoogleButton';
 import { ThemedText } from './ThemedText';

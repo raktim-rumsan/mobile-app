@@ -1,4 +1,4 @@
-import WalletSetupScreen from '@/screens/setup/wallet';
+import WalletSetupScreen from '@/core/screens/wallet';
 import React from 'react';
 
 export default function SetupWalletPage() {

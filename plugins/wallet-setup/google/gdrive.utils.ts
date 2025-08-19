@@ -1,4 +1,4 @@
-import { TLog } from '@/plugins/iHostService';
+import { TLog } from '@/core/types/iHostService';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 

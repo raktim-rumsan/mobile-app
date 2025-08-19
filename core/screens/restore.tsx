@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui';
-import { WALLET_INFO } from '@/constants/wallet';
-import { iWalletPlugin } from '@/plugins/iWalletPlugin';
+import { WALLET_INFO } from '@/core/constants/wallet';
+import { iWalletPlugin } from '@/core/types/iWalletPlugin';
 import { Wallet } from 'ethers';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';

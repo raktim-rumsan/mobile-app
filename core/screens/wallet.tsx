@@ -1,5 +1,5 @@
 import { LoadingScreen } from '@/components/LoadingScreen';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/core/context/AppContext';
 import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';

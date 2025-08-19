@@ -1,4 +1,4 @@
-import TimeoffScreen from '@/screens/timeoff';
+import TimeoffScreen from '@/project/screens/timeoff';
 import { SafeAreaView } from 'react-native';
 
 export default function TimeoffPage() {

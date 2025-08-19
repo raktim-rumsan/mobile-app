@@ -1,4 +1,4 @@
-import { useCamera } from '@/context/CameraContext';
+import { useCamera } from '@/core/context/CameraContext';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';

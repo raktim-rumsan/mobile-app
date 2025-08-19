@@ -1,4 +1,4 @@
-import { iHostService } from '@/plugins/iHostService';
+import { iHostService } from '@/core/types/iHostService';
 
 const storage = (setup: iHostService) => ({
   set: async (name: string, value: Record<string, any> | string) => {

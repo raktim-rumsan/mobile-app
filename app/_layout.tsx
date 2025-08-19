@@ -13,10 +13,10 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { AlertPopupProvider } from '@/context/AlertPopupProvider';
-import { AppProvider } from '@/context/AppContext';
-import { AuthProvider } from '@/context/auth';
-import { CameraProvider } from '@/context/CameraContext';
+import { AlertPopupProvider } from '@/core/context/AlertPopupProvider';
+import { AppProvider } from '@/core/context/AppContext';
+import { AuthProvider } from '@/core/context/auth';
+import { CameraProvider } from '@/core/context/CameraContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export {

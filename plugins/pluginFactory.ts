@@ -1,7 +1,7 @@
+import { iAppServicePlugin } from '../core/types/iAppServicePlugin';
+import { iHostService } from '../core/types/iHostService';
+import { iWalletPlugin } from '../core/types/iWalletPlugin';
 import { useRamanService } from './app-service/raman';
-import { iAppServicePlugin } from './iAppServicePlugin';
-import { iHostService } from './iHostService';
-import { iWalletPlugin } from './iWalletPlugin';
 import { useGoogleDriveSetup } from './wallet-setup/google';
 
 type WalletPlugin = () => iWalletPlugin;

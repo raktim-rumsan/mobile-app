@@ -1,9 +1,9 @@
 import { LoadingScreen } from '@/components/LoadingScreen';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/core/context/AppContext';
+import HomeScreen from '@/core/screens/home';
+import { hostService } from '@/core/screens/hostService';
+import LockScreen from '@/core/screens/lock';
 import { useAppServicePlugin } from '@/plugins/pluginFactory';
-import HomeScreen from '@/screens/home';
-import { hostService } from '@/screens/setup/hostService';
-import LockScreen from '@/screens/setup/lock';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {

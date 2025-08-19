@@ -1,19 +1,19 @@
-import jwt from "jsonwebtoken";
-import { AuthUser } from "@/utils/middleware";
+import { AuthUser } from '@/core/utils/middleware';
+import jwt from 'jsonwebtoken';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const refreshToken = searchParams.get("refreshToken");
+  const refreshToken = searchParams.get('refreshToken');
 
   if (!refreshToken) {
-    return Response.json({ error: "Missing refresh token" }, { status: 400 });
+    return Response.json({ error: 'Missing refresh token' }, { status: 400 });
   }
 
   try {
     // Verify the refresh token
     const decoded = jwt.verify(
       refreshToken,
-      process.env.JWT_REFRESH_SECRET!
+      process.env.JWT_REFRESH_SECRET!,
     ) as AuthUser;
 
     // Generate new access token
@@ -29,14 +29,14 @@ export async function GET(req: Request) {
         provider: decoded.provider,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: "10s" }
+      { expiresIn: '10s' },
     );
 
     return Response.json({ token: accessToken });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      return Response.json({ error: "Refresh token expired" }, { status: 401 });
+      return Response.json({ error: 'Refresh token expired' }, { status: 401 });
     }
-    return Response.json({ error: "Invalid refresh token" }, { status: 401 });
+    return Response.json({ error: 'Invalid refresh token' }, { status: 401 });
   }
 }

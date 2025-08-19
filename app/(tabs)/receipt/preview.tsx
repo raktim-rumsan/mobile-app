@@ -1,4 +1,4 @@
-import ReceiptPreview from '@/screens/receipt/preview';
+import ReceiptPreview from '@/project/screens/receipt/preview';
 
 export default function ReceiptPreviewPage() {
   return <ReceiptPreview />;

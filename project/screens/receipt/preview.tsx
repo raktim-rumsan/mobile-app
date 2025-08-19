@@ -1,4 +1,4 @@
-import { useCamera } from '@/context/CameraContext';
+import { useCamera } from '@/core/context/CameraContext';
 import { router, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';

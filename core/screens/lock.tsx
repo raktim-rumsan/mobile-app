@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui';
-import { useAlertPopup } from '@/context/AlertPopupProvider';
-import { useApp } from '@/context/AppContext';
+import { useAlertPopup } from '@/core/context/AlertPopupProvider';
+import { useApp } from '@/core/context/AppContext';
 import { useAppServicePlugin } from '@/plugins/pluginFactory';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
@@ -62,9 +62,13 @@ export default function LockScreen() {
               const wallet = await hostService.getWallet('TODO_temp');
               setWallet(wallet);
             }
-            const success = await appService.onUnlock();
-            if (success) {
-              setIsLocked(false);
+            try {
+              const success = await appService.onUnlock();
+              if (success) {
+                setIsLocked(false);
+              }
+            } catch (error: any) {
+              showError('Failed to unlock wallet', error.message);
             }
           }}
           disabled={isLoading}

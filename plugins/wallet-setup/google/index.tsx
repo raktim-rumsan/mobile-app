@@ -1,7 +1,7 @@
 // hooks/useGoogleDriveSetup.ts
-import { iHostService, TLog } from '@/plugins/iHostService';
-import { iWalletPlugin } from '@/plugins/iWalletPlugin';
-import { AuthUser } from '@/utils/middleware';
+import { iHostService, TLog } from '@/core/types/iHostService';
+import { iWalletPlugin } from '@/core/types/iWalletPlugin';
+import { AuthUser } from '@/core/utils/middleware';
 import {
   AuthError,
   AuthRequestConfig,

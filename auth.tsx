@@ -1,14 +1,14 @@
-import { AuthUser } from "@/utils/middleware";
+import { AuthUser } from '@/core/utils/middleware';
 import {
   AuthError,
   AuthRequestConfig,
   DiscoveryDocument,
   makeRedirectUri,
   useAuthRequest,
-} from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
-import { jwtDecode } from "jwt-decode";
-import * as React from "react";
+} from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { jwtDecode } from 'jwt-decode';
+import * as React from 'react';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -21,8 +21,8 @@ const AuthContext = React.createContext({
 });
 
 const config: AuthRequestConfig = {
-  clientId: "google",
-  scopes: ["openid", "profile", "email"],
+  clientId: 'google',
+  scopes: ['openid', 'profile', 'email'],
   redirectUri: makeRedirectUri(),
 };
 
@@ -43,19 +43,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [response]);
 
   async function handleResponse() {
-    if (response?.type === "success") {
+    if (response?.type === 'success') {
       try {
         setIsLoading(true);
         const { code } = response.params;
 
         // exchange code for jwt token
         const formData = new FormData();
-        formData.append("code", code);
+        formData.append('code', code);
 
-        const tokenResponse = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/token`, {
-          method: "POST",
-          body: formData,
-        });
+        const tokenResponse = await fetch(
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/token`,
+          {
+            method: 'POST',
+            body: formData,
+          },
+        );
         const jwtToken = await tokenResponse.json();
         setToken(jwtToken);
         // decode jwt token
@@ -66,9 +69,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } finally {
         setIsLoading(false);
       }
-    } else if (response?.type === "cancel") {
-      alert("Sign in cancelled");
-    } else if (response?.type === "error") {
+    } else if (response?.type === 'cancel') {
+      alert('Sign in cancelled');
+    } else if (response?.type === 'error') {
       setError(response?.error as AuthError);
     }
   }
@@ -84,10 +87,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async () => {
-    console.log("signIn");
+    console.log('signIn');
     try {
       if (!request) {
-        console.log("No request");
+        console.log('No request');
         return;
       }
 
@@ -113,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => {
   const context = React.useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

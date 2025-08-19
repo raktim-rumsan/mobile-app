@@ -1,7 +1,7 @@
-import { useAuth } from "@/context/auth";
-import { useEffect, useState } from "react";
-import { Button, Image, useColorScheme, View } from "react-native";
-import { ThemedText } from "./ThemedText";
+import { useAuth } from '@/core/context/auth';
+import { useEffect, useState } from 'react';
+import { Button, Image, useColorScheme, View } from 'react-native';
+import { ThemedText } from './ThemedText';
 
 export default function ProfileCard() {
   const { signOut, user } = useAuth();
@@ -21,9 +21,9 @@ export default function ProfileCard() {
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
 
-        return `${hours.toString().padStart(2, "0")} hrs ${minutes
+        return `${hours.toString().padStart(2, '0')} hrs ${minutes
           .toString()
-          .padStart(2, "0")} min ${seconds.toString().padStart(2, "0")} sec`;
+          .padStart(2, '0')} min ${seconds.toString().padStart(2, '0')} sec`;
       };
 
       // Set initial time
@@ -51,16 +51,16 @@ export default function ProfileCard() {
   return (
     <View
       style={{
-        width: "90%",
+        width: '90%',
         maxWidth: 400,
         gap: 20,
         padding: 20,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "gray",
+        borderColor: 'gray',
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Image
           source={{ uri: user?.picture }}
           style={{
@@ -71,23 +71,25 @@ export default function ProfileCard() {
         />
 
         <View>
-          <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
+          <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
             {user?.name}
           </ThemedText>
-          <ThemedText style={{ fontSize: 14, color: "gray" }}>{user?.email}</ThemedText>
+          <ThemedText style={{ fontSize: 14, color: 'gray' }}>
+            {user?.email}
+          </ThemedText>
         </View>
       </View>
 
       <View>
-        <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
+        <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
           Token expires in:
         </ThemedText>
-        <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
-          {timeRemaining !== null ? timeRemaining : "..."}
+        <ThemedText type="defaultSemiBold" style={{ textAlign: 'center' }}>
+          {timeRemaining !== null ? timeRemaining : '...'}
         </ThemedText>
       </View>
 
-      <Button title="Sign Out" onPress={signOut} color={"red"} />
+      <Button title="Sign Out" onPress={signOut} color={'red'} />
     </View>
   );
 }

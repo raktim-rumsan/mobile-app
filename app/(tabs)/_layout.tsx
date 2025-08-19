@@ -15,8 +15,8 @@ import {
 import { View } from '@/components/Themed';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
-import { useApp } from '@/context/AppContext';
+import Colors from '@/core/constants/Colors';
+import { useApp } from '@/core/context/AppContext';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 

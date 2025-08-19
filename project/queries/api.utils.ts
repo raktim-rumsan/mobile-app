@@ -1,5 +1,5 @@
-import { useApp } from '@/context/AppContext';
-import { getServerInfo } from '@/utils/storage.utils';
+import { useApp } from '@/core/context/AppContext';
+import { getServerInfo } from '@/core/utils/storage.utils';
 import { RumsanClient } from '@rumsan/sdk/clients';
 import { QueryClient } from '@tanstack/react-query';
 

@@ -1,7 +1,7 @@
 import LoginForm from '@/components/LoginForm';
 import ProfileCard from '@/components/ProfileCard';
 import { ThemedView } from '@/components/ThemedView';
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/core/context/auth';
 import { ActivityIndicator } from 'react-native';
 
 export default function HomeScreen() {

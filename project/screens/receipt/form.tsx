@@ -14,13 +14,13 @@ import {
   FormControlLabel,
   FormControlLabelText,
 } from '@/components/ui/form-control';
-import { useCamera } from '@/context/CameraContext';
+import { useCamera } from '@/core/context/CameraContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 // @ts-ignore
 import { View } from '@/components/Themed';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/core/context/AppContext';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';

@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui';
-import { iWalletPlugin } from '@/plugins/iWalletPlugin';
+import { iWalletPlugin } from '@/core/types/iWalletPlugin';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -12,7 +12,7 @@ import {
 import { hostService } from './hostService';
 
 export default function WalletCreateNew(props: { walletSetup: iWalletPlugin }) {
-  const [password, setPassword] = useState('11111111');
+  const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [creatingWallet, setCreatingWallet] = useState(false);
   const [log, setLog] = useState<{ message: string; isError: boolean } | null>(

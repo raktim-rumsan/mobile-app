@@ -1,5 +1,5 @@
-import { iAppServicePlugin } from '@/plugins/iAppServicePlugin';
-import { iHostService } from '@/plugins/iHostService';
+import { iAppServicePlugin } from '@/core/types/iAppServicePlugin';
+import { iHostService } from '@/core/types/iHostService';
 import { RumsanClient } from '@/rumsan/clients';
 import { Wallet } from 'ethers';
 import React, { useState } from 'react';

@@ -1,8 +1,8 @@
-import { withAuth } from "@/utils/middleware";
+import { withAuth } from '@/core/utils/middleware';
 
 // Example protected data
 const mockData = {
-  secretMessage: "This is protected data!",
+  secretMessage: 'This is protected data!',
   timestamp: new Date().toISOString(),
 };
 

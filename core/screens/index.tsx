@@ -9,7 +9,7 @@ import {
   Text,
   VStack,
 } from '@/components/ui';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/core/context/AppContext';
 import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';

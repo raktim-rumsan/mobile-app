@@ -1,4 +1,4 @@
-import TimeoffRequestItemized from '@/screens/timeoff/request-itemized';
+import TimeoffRequestItemized from '@/project/screens/timeoff/request-itemized';
 
 export default function TimeoffPage() {
   return <TimeoffRequestItemized />;

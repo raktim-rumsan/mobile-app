@@ -1,388 +1,299 @@
-import NfcReader from '@/components/nfc/nfc-reader';
-import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
+import { ThemedText } from '@/components/ThemedText';
+import { Image } from '@/components/ui';
+import { useThemeColor } from '@/core/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import type { StyleProp, TextInputProps, TextStyle } from 'react-native';
 import {
+  Dimensions,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
-  StatusBar,
-  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type Message = {
+interface Message {
   id: string;
-  message: string;
-  type: string;
-  timestamp?: Date;
-};
+  text: string;
+  timestamp: Date;
+  isUser: boolean;
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
+}
 
-type RootStackParamList = {
-  chat: undefined;
-  history: undefined;
-  // add other routes here if needed
-};
-
-const Input = ({
-  style,
-  placeholder,
-  ...props
-}: { style?: StyleProp<TextStyle>; placeholder?: string } & TextInputProps) => (
-  <TextInput
-    style={[{ height: 40, paddingHorizontal: 8 }, style]}
-    placeholder={placeholder}
-    placeholderTextColor="#888"
-    {...props}
-  />
-);
+const { width } = Dimensions.get('window');
 
 export default function ChatScreen() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [message, setMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      type: 'user',
-      message: 'What is AI chat bot ?',
+      text: 'Hello! How can I help you today?',
+      timestamp: new Date(Date.now() - 10000),
+      isUser: false,
+      status: 'read',
     },
     {
       id: '2',
-      type: 'ai',
-      message:
-        'An AI chatbot is a computer program designed to simulate human conversation through text or voice interactions.What sets it apart from traditional chatbots is its ability to understand and respond to user input in a natural, human-like way.',
+      text: 'Hi! I have a question about my wallet balance.',
+      timestamp: new Date(Date.now() - 5000),
+      isUser: true,
+      status: 'read',
     },
     {
       id: '3',
-      type: 'user',
-      message: 'How Does it Work?',
-    },
-    {
-      id: '4',
-      type: 'ai',
-      message:
-        "User Input:\nYou type or speak a message.\nProcessing:\nThe chatbot's AI analyzes your message to understand its meaning.",
+      text: "Sure! I'd be happy to help you with your wallet balance. What specific information do you need?",
+      timestamp: new Date(),
+      isUser: false,
+      status: 'read',
     },
   ]);
 
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  // Auto scroll to bottom when new messages arrive
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const iconColor = useThemeColor({}, 'icon');
+  const borderColor =
+    useThemeColor({}, 'background') === '#fff' ? '#e5e7eb' : '#374151';
+  const cardColor =
+    useThemeColor({}, 'background') === '#fff' ? '#f9fafb' : '#1f2937';
+
   useEffect(() => {
-    if (messages.length > 0 && flatListRef.current) {
+    // Auto-scroll to bottom when new messages are added
+    if (messages.length > 0) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (message.trim() === '') return;
+  const sendMessage = () => {
+    if (inputText.trim().length === 0) return;
 
-    // Add user message
-    const userMessage: Message = {
+    const newMessage: Message = {
       id: Date.now().toString(),
-      message: message,
-      type: 'user',
+      text: inputText.trim(),
       timestamp: new Date(),
+      isUser: true,
+      status: 'sending',
     };
 
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setMessage('');
-
-    // Show typing indicator
+    setMessages((prev) => [...prev, newMessage]);
+    setInputText('');
     setIsTyping(true);
 
-    // Simulate bot response after a short delay
+    // Simulate message status updates
     setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, status: 'sent' as const } : msg,
+        ),
+      );
+    }, 500);
+
+    // Simulate bot response
+    setTimeout(() => {
+      setIsTyping(false);
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        message: getBotResponse(message),
-        type: 'ai',
+        text: "Thank you for your message! I'm processing your request and will get back to you shortly.",
         timestamp: new Date(),
+        isUser: false,
+        status: 'read',
       };
-      setMessages((prevMessages) => [...prevMessages, botResponse]);
-      setIsTyping(false);
+      setMessages((prev) => [...prev, botResponse]);
     }, 2000);
   };
 
-  const getBotResponse = (userMessage: string): string => {
-    const lowerCaseMessage = userMessage.toLowerCase();
+  const handleKeyPress = (event: any) => {
+    if (event.nativeEvent.key === 'Enter') {
+      if (event.nativeEvent.shiftKey) {
+        // Shift+Enter: Allow new line (default behavior)
+        return;
+      } else {
+        // Enter only: Send message
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+  };
 
-    if (lowerCaseMessage.includes('hello') || lowerCaseMessage.includes('hi')) {
-      return 'Hello there! How can I assist you today?';
-    } else if (lowerCaseMessage.includes('help')) {
-      return 'I can help you with information, answer questions, or just chat. What would you like to know?';
-    } else if (lowerCaseMessage.includes('thank')) {
-      return "You're welcome! Is there anything else you'd like to know?";
-    } else if (lowerCaseMessage.includes('bye')) {
-      return 'Goodbye! Have a great day!';
-    } else {
-      return "That's interesting. Can you tell me more or ask something else?";
+  const formatTime = (timestamp: Date) => {
+    return timestamp.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'sending':
+        return <Ionicons name="time-outline" size={12} color="#9ca3af" />;
+      case 'sent':
+        return <Ionicons name="checkmark" size={12} color="#9ca3af" />;
+      case 'delivered':
+        return <Ionicons name="checkmark-done" size={12} color="#9ca3af" />;
+      case 'read':
+        return <Ionicons name="checkmark-done" size={12} color="#3b82f6" />;
+      default:
+        return null;
     }
   };
 
   const renderMessage = ({ item }: { item: Message }) => (
-    <Box className="mb-6">
-      <HStack
-        key={item.id}
-        style={{
-          ...styles.messageContainer,
-          ...(item.type === 'user'
-            ? styles.userMessageContainer
-            : styles.aiMessageContainer),
-        }}
+    <View
+      className={`flex-row mb-3 ${
+        item.isUser ? 'justify-end' : 'justify-start'
+      } px-4`}
+    >
+      <View
+        className={`max-w-[80%] ${item.isUser ? 'items-end' : 'items-start'}`}
       >
-        <Box style={styles.avatarContainer}>
-          {item.type === 'user' ? (
-            <Box style={styles.userAvatar}>
-              <Ionicons name="person" size={24} color="white" />
-            </Box>
-          ) : (
-            <Box style={styles.avatarContainer}>
-              <Image
-                source={require('../../assets/images/bhunte.png')}
-                style={styles.aiAvatar}
-                alt="Bhunte logo"
-              />
-            </Box>
-          )}
-        </Box>
-        <VStack style={styles.messageContent}>
-          <Text style={styles.messageText}>{item.message}</Text>
-          <HStack style={styles.messageActions}>
-            <Pressable style={styles.copyButton}></Pressable>
-
-            <HStack style={styles.reactionButtons}>
-              <Pressable style={styles.reactionButton}>
-                <Ionicons name="thumbs-down-outline" size={20} color="#888" />
-              </Pressable>
-              <Pressable style={styles.reactionButton}>
-                <Ionicons name="thumbs-up-outline" size={20} color="#888" />
-              </Pressable>
-            </HStack>
-          </HStack>
-        </VStack>
-      </HStack>
-    </Box>
+        <View
+          className={`rounded-2xl px-4 py-3 ${
+            item.isUser ? 'bg-blue-500 rounded-br-md' : 'rounded-bl-md'
+          }`}
+          style={!item.isUser ? { backgroundColor: cardColor } : {}}
+        >
+          <Text
+            className={`text-base leading-5 ${item.isUser ? 'text-white' : ''}`}
+            style={!item.isUser ? { color: textColor } : {}}
+          >
+            {item.text}
+          </Text>
+        </View>
+        <View
+          className={`flex-row items-center mt-1 ${
+            item.isUser ? 'flex-row-reverse' : 'flex-row'
+          }`}
+        >
+          <Text className="text-xs text-gray-500 mx-1">
+            {formatTime(item.timestamp)}
+          </Text>
+          {item.isUser && getStatusIcon(item.status)}
+        </View>
+      </View>
+    </View>
   );
 
-  const renderTypingIndicator = () => {
-    if (!isTyping) return null;
-
-    return (
-      <Box className="mb-6">
-        <HStack className="items-start">
-          <Box className="bg-gray-100 p-4 rounded-2xl">
-            <Text className="text-gray-800">Bhunte is typing...</Text>
-          </Box>
-        </HStack>
-      </Box>
-    );
-  };
+  const renderTypingIndicator = () => (
+    <View className="flex-row justify-start px-4 mb-3">
+      <View
+        className="rounded-2xl rounded-bl-md px-4 py-3"
+        style={{ backgroundColor: cardColor }}
+      >
+        <View className="flex-row items-center space-x-1">
+          <View className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
+          <View
+            className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"
+            style={{ animationDelay: '0.2s' }}
+          />
+          <View
+            className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"
+            style={{ animationDelay: '0.4s' }}
+          />
+        </View>
+      </View>
+    </View>
+  );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <NfcReader
-        onNfcScanned={(content) => {
-          setMessage(content);
-          handleSend();
-        }}
-      />
-      <Box style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-
-        {/* Header */}
-        <HStack style={styles.header}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
+      {/* Header */}
+      <View
+        className="flex-row items-center justify-between px-4 py-3 border-b"
+        style={{ borderBottomColor: borderColor }}
+      >
+        <View className="flex-row items-center">
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()}
+            className="mr-3 p-2 -ml-2"
           >
-            <Ionicons name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={24} color={textColor} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Ask Bhunte</Text>
-          <TouchableOpacity
-            style={styles.historyButton}
-            onPress={() => navigation.navigate('history')}
-          >
-            <Ionicons name="time-outline" size={24} color="#000" />
-          </TouchableOpacity>
-        </HStack>
-
-        {/* Chat Messages */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          className="flex-1"
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        >
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: 16 }}
-            inverted={false}
-            ListFooterComponent={renderTypingIndicator}
-          />
-
-          {/* Input Area */}
-          <HStack style={styles.inputContainer}>
-            <HStack style={styles.inputWrapper}>
-              <Pressable style={styles.searchIcon}>
-                <Ionicons name="search" size={24} color="#888" />
-              </Pressable>
-              <Input
-                style={styles.input}
-                placeholder="Type a message..."
-                value={message}
-                onChangeText={setMessage}
-                onSubmitEditing={handleSend}
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-full items-center justify-center mr-3 overflow-hidden">
+              <Image
+                source={require('../../assets/images/bhunte.png')}
+                alt="Bhunte logo"
+                size="xs"
+                className="w-full h-full"
               />
-            </HStack>
-            <Pressable
-              style={styles.sendButton}
-              disabled={!message.trim()}
-              onPress={handleSend}
-            >
-              <Ionicons name="send" size={24} color="white" />
-            </Pressable>
-          </HStack>
-        </KeyboardAvoidingView>
-      </Box>
+            </View>
+            <View>
+              <ThemedText className="font-semibold text-lg">
+                Ask Bhunte
+              </ThemedText>
+              <Text className="text-green-500 text-sm">Online</Text>
+            </View>
+          </View>
+        </View>
+        <TouchableOpacity>
+          <Ionicons name="call" size={24} color={textColor} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Messages */}
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          className="flex-1 pt-4"
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={isTyping ? renderTypingIndicator : null}
+        />
+
+        {/* Input Area */}
+        <View
+          className="flex-row items-end px-4 py-3 border-t"
+          style={{ borderTopColor: borderColor }}
+        >
+          <View className="flex-1 flex-row items-end mr-3">
+            <TextInput
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
+              placeholderTextColor="#9ca3af"
+              multiline
+              maxLength={1000}
+              className="flex-1 max-h-24 min-h-12 px-4 py-3 rounded-2xl border text-base"
+              style={{
+                borderColor: borderColor,
+                backgroundColor: cardColor,
+                color: textColor,
+              }}
+              onKeyPress={handleKeyPress}
+              blurOnSubmit={false}
+              returnKeyType="send"
+            />
+            <TouchableOpacity className="ml-2 p-2">
+              <Ionicons name="attach" size={24} color={iconColor} />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            onPress={sendMessage}
+            className="w-12 h-12 bg-blue-500 rounded-full items-center justify-center"
+            disabled={inputText.trim().length === 0}
+            style={{
+              opacity: inputText.trim().length === 0 ? 0.5 : 1,
+            }}
+          >
+            <Ionicons name="send" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111',
-  },
-  historyButton: {
-    padding: 4,
-  },
-  chatContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  messageContainer: {
-    marginVertical: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignItems: 'flex-start',
-  },
-  userMessageContainer: {
-    backgroundColor: '#f8f9fa',
-  },
-  aiMessageContainer: {
-    backgroundColor: '#f8f9fa',
-  },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4CAF50',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  aiAvatar: {
-    width: 45,
-    height: 45,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  messageContent: {
-    flex: 1,
-  },
-  messageText: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
-  },
-  messageActions: {
-    justifyContent: 'space-between',
-    marginTop: 12,
-    width: '100%',
-  },
-  copyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  copyText: {
-    marginLeft: 4,
-    color: '#888',
-    fontSize: 14,
-  },
-  reactionButtons: {
-    flexDirection: 'row',
-  },
-  reactionButton: {
-    marginLeft: 16,
-    padding: 2,
-  },
-  inputContainer: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  inputWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 24,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    height: 48,
-  },
-  searchIcon: {
-    padding: 4,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-  },
-  attachButton: {
-    padding: 4,
-  },
-  sendButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#7c4dff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

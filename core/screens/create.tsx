@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { hostService } from './hostService';
+import { hostService } from '../services/hostService';
 
 export default function WalletCreateNew(props: { walletSetup: iWalletPlugin }) {
   const [password, setPassword] = useState('');
@@ -48,7 +48,7 @@ export default function WalletCreateNew(props: { walletSetup: iWalletPlugin }) {
     }
 
     await hostService.setWallet(wallet);
-    router.push('/lock');
+    router.push('/home');
     setCreatingWallet(false);
   };
 

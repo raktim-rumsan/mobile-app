@@ -1,0 +1,27 @@
+import ApiService from '@/core/services/apiService';
+import { hostService } from '@/core/services/hostService';
+import { AuthClient } from '@/rumsan/clients/auth.client';
+import { router } from 'expo-router';
+import { AppStorage } from '../utils';
+import { MiscClient } from './misc.client';
+import { ReceiptClient } from './receipt.client';
+
+export const AuthService = new AuthClient(ApiService.client);
+
+export const getServices = async () => {
+  const _store = AppStorage(hostService);
+  const token = await _store.get('token');
+  if (!token) {
+    router.replace('/home');
+    throw new Error('No token found. Please log in.');
+  }
+  ApiService.setAccessToken(token.toString());
+
+  const Receipt = new ReceiptClient(ApiService.client);
+  const Misc = new MiscClient(ApiService.client);
+
+  return {
+    Receipt,
+    Misc,
+  };
+};

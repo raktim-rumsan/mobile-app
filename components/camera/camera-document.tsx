@@ -1,5 +1,5 @@
 import { useCamera } from '@/core/context/CameraContext';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { router } from 'expo-router';
@@ -7,8 +7,11 @@ import { useRef, useState } from 'react';
 import { Button, Text, View } from 'react-native';
 import { CameraFrameDocument } from './camera-frame-document';
 
-export default function Camera() {
-  const navigation = useNavigation();
+interface CameraProps {
+  onBackPress?: () => void;
+}
+
+export default function Camera({ onBackPress }: CameraProps) {
   const { setPhotoUri } = useCamera();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
@@ -89,10 +92,7 @@ export default function Camera() {
               console.error('Camera mount error:', error);
             }}
           >
-            <CameraFrameDocument
-              onSnap={takePicture}
-              onClose={() => navigation.goBack()}
-            />
+            <CameraFrameDocument onSnap={takePicture} onClose={onBackPress} />
           </CameraView>
         </>
       )}

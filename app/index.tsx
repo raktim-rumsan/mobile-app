@@ -1,7 +1,7 @@
 import { LoadingScreen } from '@/components/LoadingScreen';
 import LandingScreen from '@/core/screens';
-import { hostService } from '@/core/screens/hostService';
 import WalletSetupScreen from '@/core/screens/wallet';
+import { hostService } from '@/core/services/hostService';
 import { Mnemonic, Wallet } from 'ethers';
 import React, { useEffect, useState } from 'react';
 

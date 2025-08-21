@@ -1,8 +1,8 @@
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useApp } from '@/core/context/AppContext';
 import HomeScreen from '@/core/screens/home';
-import { hostService } from '@/core/screens/hostService';
 import LockScreen from '@/core/screens/lock';
+import { hostService } from '@/core/services/hostService';
 import { useAppServicePlugin } from '@/plugins/pluginFactory';
 import { useEffect, useState } from 'react';
 

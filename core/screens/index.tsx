@@ -14,7 +14,7 @@ import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions } from 'react-native';
-import { hostService } from './hostService';
+import { hostService } from '../services/hostService';
 
 export default function LandingScreen() {
   const useWalletSetup = getWalletBackupProvider(hostService);

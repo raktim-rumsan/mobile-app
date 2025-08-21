@@ -1,10 +1,12 @@
 import { ThemedText } from '@/components/ThemedText';
 import { Image } from '@/components/ui';
 import { useThemeColor } from '@/core/hooks/useThemeColor';
+import { openaiService } from '@/core/services/openaiService';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   Dimensions,
   FlatList,
   KeyboardAvoidingView,
@@ -22,6 +24,7 @@ interface Message {
   timestamp: Date;
   isUser: boolean;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
+  isStreaming?: boolean;
 }
 
 const { width } = Dimensions.get('window');
@@ -30,22 +33,8 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! How can I help you today?',
+      text: "Hello! I'm Bhunte, your AI assistant for Rumsan Wallet. How can I help you today?",
       timestamp: new Date(Date.now() - 10000),
-      isUser: false,
-      status: 'read',
-    },
-    {
-      id: '2',
-      text: 'Hi! I have a question about my wallet balance.',
-      timestamp: new Date(Date.now() - 5000),
-      isUser: true,
-      status: 'read',
-    },
-    {
-      id: '3',
-      text: "Sure! I'd be happy to help you with your wallet balance. What specific information do you need?",
-      timestamp: new Date(),
       isUser: false,
       status: 'read',
     },
@@ -53,6 +42,7 @@ export default function ChatScreen() {
 
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const backgroundColor = useThemeColor({}, 'background');
@@ -72,12 +62,13 @@ export default function ChatScreen() {
     }
   }, [messages]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputText.trim().length === 0) return;
 
+    const userMessageText = inputText.trim();
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputText.trim(),
+      text: userMessageText,
       timestamp: new Date(),
       isUser: true,
       status: 'sending',
@@ -86,8 +77,9 @@ export default function ChatScreen() {
     setMessages((prev) => [...prev, newMessage]);
     setInputText('');
     setIsTyping(true);
+    setIsLoading(true);
 
-    // Simulate message status updates
+    // Update message status to sent
     setTimeout(() => {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -96,18 +88,138 @@ export default function ChatScreen() {
       );
     }, 500);
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      // Prepare conversation history for OpenAI
+      const conversationHistory = messages
+        .filter((msg) => msg.id !== newMessage.id) // Exclude the current message
+        .map((msg) => ({
+          role: msg.isUser ? ('user' as const) : ('assistant' as const),
+          content: msg.text,
+        }));
+
+      // Create a streaming AI response message
+      const aiMessageId = (Date.now() + 1).toString();
+      const streamingMessage: Message = {
+        id: aiMessageId,
+        text: '',
+        timestamp: new Date(),
+        isUser: false,
+        status: 'read',
+        isStreaming: true,
+      };
+
       setIsTyping(false);
-      const botResponse: Message = {
+      setMessages((prev) => [...prev, streamingMessage]);
+
+      // Update user message status to delivered
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id
+            ? { ...msg, status: 'delivered' as const }
+            : msg,
+        ),
+      );
+
+      // Stream AI response
+      await openaiService.sendChatMessageStream(
+        userMessageText,
+        conversationHistory,
+        // onToken callback - append each token to the streaming message
+        (token: string) => {
+          // Ensure typing indicator is off when first token arrives
+          setIsTyping(false);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId ? { ...msg, text: msg.text + token } : msg,
+            ),
+          );
+        },
+        // onComplete callback
+        () => {
+          setIsLoading(false);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId ? { ...msg, isStreaming: false } : msg,
+            ),
+          );
+
+          // Mark user message as read
+          setTimeout(() => {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === newMessage.id
+                  ? { ...msg, status: 'read' as const }
+                  : msg,
+              ),
+            );
+          }, 500);
+        },
+        // onError callback
+        (error: Error) => {
+          setIsLoading(false);
+          console.error('Error streaming message from OpenAI:', error);
+
+          // Remove the streaming message and add error message
+          setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
+
+          const errorResponse: Message = {
+            id: (Date.now() + 2).toString(),
+            text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment, or contact support if the issue persists.",
+            timestamp: new Date(),
+            isUser: false,
+            status: 'read',
+          };
+
+          setMessages((prev) => [...prev, errorResponse]);
+
+          // Update user message status to show it failed
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === newMessage.id
+                ? { ...msg, status: 'sent' as const }
+                : msg,
+            ),
+          );
+
+          // Show alert
+          Alert.alert(
+            'Connection Error',
+            'Unable to connect to AI assistant. Please check your internet connection and try again.',
+            [{ text: 'OK' }],
+          );
+        },
+      );
+    } catch (error) {
+      setIsTyping(false);
+      setIsLoading(false);
+
+      console.error('Error sending message to OpenAI:', error);
+
+      // Show error message
+      const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thank you for your message! I'm processing your request and will get back to you shortly.",
+        text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment, or contact support if the issue persists.",
         timestamp: new Date(),
         isUser: false,
         status: 'read',
       };
-      setMessages((prev) => [...prev, botResponse]);
-    }, 2000);
+
+      setMessages((prev) => [...prev, errorResponse]);
+
+      // Update user message status to show it failed
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, status: 'sent' as const } : msg,
+        ),
+      );
+
+      // Show alert
+      Alert.alert(
+        'Connection Error',
+        'Unable to connect to AI assistant. Please check your internet connection and try again.',
+        [{ text: 'OK' }],
+      );
+    }
   };
 
   const handleKeyPress = (event: any) => {
@@ -166,6 +278,20 @@ export default function ChatScreen() {
           >
             {item.text}
           </Text>
+          {/* Streaming indicator */}
+          {item.isStreaming && (
+            <View className="flex-row items-center mt-1">
+              <View className="w-1 h-1 bg-gray-400 rounded-full animate-pulse mr-1" />
+              <View
+                className="w-1 h-1 bg-gray-400 rounded-full animate-pulse mr-1"
+                style={{ animationDelay: '0.2s' }}
+              />
+              <View
+                className="w-1 h-1 bg-gray-400 rounded-full animate-pulse"
+                style={{ animationDelay: '0.4s' }}
+              />
+            </View>
+          )}
         </View>
         <View
           className={`flex-row items-center mt-1 ${
@@ -226,7 +352,11 @@ export default function ChatScreen() {
               />
             </View>
             <View>
-              <ThemedText className="font-semibold text-lg">
+              <ThemedText
+                className="font-semibold text-lg"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 Ask Bhunte
               </ThemedText>
               <Text className="text-green-500 text-sm">Online</Text>
@@ -252,30 +382,34 @@ export default function ChatScreen() {
           className="flex-1 pt-4"
           showsVerticalScrollIndicator={false}
           ListFooterComponent={isTyping ? renderTypingIndicator : null}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
         />
 
         {/* Input Area */}
         <View
-          className="flex-row items-end px-4 py-3 border-t"
+          className="flex-row items-center px-4 py-3 border-t"
           style={{ borderTopColor: borderColor }}
         >
-          <View className="flex-1 flex-row items-end mr-3">
+          <View className="flex-1 flex-row items-center mr-3">
             <TextInput
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
+              placeholder="Please ask me anything..."
               placeholderTextColor="#9ca3af"
-              multiline
+              multiline={false}
               maxLength={1000}
-              className="flex-1 max-h-24 min-h-12 px-4 py-3 rounded-2xl border text-base"
+              className="flex-1 h-12 px-4 py-3 rounded-2xl border text-base"
               style={{
                 borderColor: borderColor,
                 backgroundColor: cardColor,
                 color: textColor,
+                textAlignVertical: 'center',
               }}
-              onKeyPress={handleKeyPress}
+              onSubmitEditing={sendMessage}
               blurOnSubmit={false}
               returnKeyType="send"
+              editable={!isLoading}
             />
             <TouchableOpacity className="ml-2 p-2">
               <Ionicons name="attach" size={24} color={iconColor} />
@@ -285,12 +419,16 @@ export default function ChatScreen() {
           <TouchableOpacity
             onPress={sendMessage}
             className="w-12 h-12 bg-blue-500 rounded-full items-center justify-center"
-            disabled={inputText.trim().length === 0}
+            disabled={inputText.trim().length === 0 || isLoading}
             style={{
-              opacity: inputText.trim().length === 0 ? 0.5 : 1,
+              opacity: inputText.trim().length === 0 || isLoading ? 0.5 : 1,
             }}
           >
-            <Ionicons name="send" size={20} color="white" />
+            {isLoading ? (
+              <Ionicons name="hourglass" size={20} color="white" />
+            ) : (
+              <Ionicons name="send" size={20} color="white" />
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

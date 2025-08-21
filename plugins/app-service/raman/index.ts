@@ -1,31 +1,27 @@
 import { iAppServicePlugin } from '@/core/types/iAppServicePlugin';
 import { iHostService } from '@/core/types/iHostService';
-import { RumsanClient } from '@/rumsan/clients';
+import { AuthService } from '@/project/services';
+import { AppStorage } from '@/project/utils';
 import { Wallet } from 'ethers';
 import React, { useState } from 'react';
-import { _utils } from './utils';
 
 export function useRamanService(setup: iHostService): iAppServicePlugin {
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const _store = _utils.storage(setup);
+  const _store = AppStorage(setup);
 
   const getAccessToken = React.useCallback(
     async (wallet: Wallet): Promise<boolean> => {
       setIsLoading(true);
-      const serverInfo = { url: null, clientId: '1111111' }; //await getServerInfo();
-      const baseURL = serverInfo?.url || process.env.EXPO_PUBLIC_SERVER_URL;
-      const rumsanClient = new RumsanClient({
-        baseURL,
-      });
+      const serverInfo = { url: null, clientId: '1111111' };
 
       try {
-        const { data: ChallengeData } = await rumsanClient.Auth.getChallenge({
+        const { data: ChallengeData } = await AuthService.getChallenge({
           clientId: serverInfo?.clientId || undefined,
         });
         const { challenge, clientId } = ChallengeData;
         const signature = await wallet.signMessage(challenge);
-        const { data } = await rumsanClient.Auth.walletLogin({
+        const { data } = await AuthService.walletLogin({
           challenge,
           signature: signature as `0x${string}`,
         });

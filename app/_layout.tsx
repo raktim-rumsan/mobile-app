@@ -17,7 +17,8 @@ import { AlertPopupProvider } from '@/core/context/AlertPopupProvider';
 import { AppProvider } from '@/core/context/AppContext';
 import { AuthProvider } from '@/core/context/auth';
 import { CameraProvider } from '@/core/context/CameraContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/core/utils/query.client';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -75,8 +76,6 @@ function RootLayoutNav() {
       </Stack>
     );
   };
-
-  const queryClient = new QueryClient();
 
   return (
     <AuthProvider>

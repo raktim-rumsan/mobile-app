@@ -9,19 +9,31 @@ import { router } from 'expo-router';
 import {
   ChatBubbleLeftIcon,
   DevicePhoneMobileIcon,
+  MapPinIcon,
+  SignalIcon,
 } from 'react-native-heroicons/outline';
 
 export default function HomeScreen() {
   const links = [
     {
       title: 'NFC Reader',
-      icon: DevicePhoneMobileIcon,
+      icon: SignalIcon,
       onPress: () => router.push('/demo/nfc'),
     },
     {
       title: 'NFC Writer',
-      icon: DevicePhoneMobileIcon,
+      icon: SignalIcon,
       onPress: () => router.push('/demo/nfc-write'),
+    },
+    {
+      title: 'Device Info',
+      icon: DevicePhoneMobileIcon,
+      onPress: () => router.push('/demo/device-info'),
+    },
+    {
+      title: 'Location Info',
+      icon: MapPinIcon,
+      onPress: () => router.push('/demo/location'),
     },
     {
       title: 'Chat',

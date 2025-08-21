@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { PlusCircleIcon } from 'react-native-heroicons/outline';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TimeoffScreen() {
   const router = useRouter();
@@ -84,47 +85,53 @@ export default function TimeoffScreen() {
   };
 
   return (
-    <Box style={styles.container}>
-      <StatusBar />
-      <HStack style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Request TimeOff</Text>
-        <TouchableOpacity
-          style={styles.historyButton}
-          onPress={() => router.push('/timeoff/request')}
-        >
-          <HStack className="items-center">
-            <PlusCircleIcon size={24} color="#000" style={{ marginLeft: 8 }} />
-            <Text
-              style={{
-                marginLeft: 6,
-                fontSize: 16,
-                color: '#000',
-                fontWeight: '600',
-              }}
-            >
-              New Request
-            </Text>
-          </HStack>
-        </TouchableOpacity>
-      </HStack>
+    <SafeAreaView style={{ flex: 1 }}>
+      <Box style={styles.container}>
+        <StatusBar />
+        <HStack style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Request TimeOff</Text>
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => router.push('/timeoff/request')}
+          >
+            <HStack className="items-center">
+              <PlusCircleIcon
+                size={24}
+                color="#000"
+                style={{ marginLeft: 8 }}
+              />
+              <Text
+                style={{
+                  marginLeft: 6,
+                  fontSize: 16,
+                  color: '#000',
+                  fontWeight: '600',
+                }}
+              >
+                New Request
+              </Text>
+            </HStack>
+          </TouchableOpacity>
+        </HStack>
 
-      <ScrollView className="flex-1 px-4 py-2">
-        <VStack className="space-y-4">
-          {isLoading && <ActivityIndicator />}
-          {error && <Text>Error loading leave requests</Text>}
-          {!isLoading && !error && data?.data?.length === 0 && (
-            <Text>No leave requests found.</Text>
-          )}
-          {data?.data?.map(renderRequestItem)}
-        </VStack>
-      </ScrollView>
-    </Box>
+        <ScrollView className="flex-1 px-4 py-2">
+          <VStack className="space-y-4">
+            {isLoading && <ActivityIndicator />}
+            {error && <Text>Error loading leave requests</Text>}
+            {!isLoading && !error && data?.data?.length === 0 && (
+              <Text>No leave requests found.</Text>
+            )}
+            {data?.data?.map(renderRequestItem)}
+          </VStack>
+        </ScrollView>
+      </Box>
+    </SafeAreaView>
   );
 }
 

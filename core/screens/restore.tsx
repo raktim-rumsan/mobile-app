@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { hostService } from './hostService';
+import { hostService } from '../services/hostService';
 
 export default function WalletRestore(props: {
   walletSetup: iWalletPlugin;
@@ -26,6 +26,7 @@ export default function WalletRestore(props: {
     content: string;
   } | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [decryptionProgress, setDecryptionProgress] = useState(0);
 
   const getEncryptedWallet = useCallback(async () => {
     setPendingMessage('Fetching wallet from backup...');
@@ -60,25 +61,59 @@ export default function WalletRestore(props: {
     }
 
     setPasswordError('');
-    setPendingMessage('Restoring wallet...');
+    setDecryptionProgress(0);
+    setPendingMessage('Initializing decryption...');
+
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      setDecryptionProgress((prev) => {
+        if (prev >= 90) return prev; // Don't go to 100% until actually done
+        return prev + Math.random() * 10;
+      });
+    }, 200);
+
     try {
-      const wallet = Wallet.fromEncryptedJsonSync(
+      // Add timeout for decryption process (30 seconds)
+      const decryptionPromise = Wallet.fromEncryptedJson(
         encryptedWallet.content,
         password,
       );
-      await hostService.setWallet(wallet);
-      router.push('/lock');
-    } catch {
-      setAttemptCount((prev) => prev + 1);
-      setPasswordError(
-        'Failed to restore wallet. Please check your password. Attempt: ' +
-          (attemptCount + 1),
+
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Decryption timeout')), 30000),
       );
+
+      setPendingMessage('Decrypting wallet...');
+      const wallet = (await Promise.race([
+        decryptionPromise,
+        timeoutPromise,
+      ])) as Wallet;
+
+      clearInterval(progressInterval);
+      setDecryptionProgress(100);
+      setPendingMessage('Setting up wallet...');
+      await hostService.setWallet(wallet);
+
+      setPendingMessage('Redirecting...');
+      router.push('/home');
+    } catch (error) {
+      clearInterval(progressInterval);
+      setDecryptionProgress(0);
+      console.error('Wallet restoration error:', error);
+      setAttemptCount((prev) => prev + 1);
+
+      const errorMessage =
+        error instanceof Error && error.message === 'Decryption timeout'
+          ? 'Decryption is taking too long. Please try again.'
+          : 'Failed to restore wallet. Please check your password.';
+
+      setPasswordError(`${errorMessage} Attempt: ${attemptCount + 1}`);
       setPendingMessage(null);
       return;
     }
 
     setPendingMessage(null);
+    setDecryptionProgress(0);
   };
 
   const archiveWalletAndCreateNew = useCallback(async () => {
@@ -129,6 +164,27 @@ export default function WalletRestore(props: {
         </Text>
       )}
 
+      {pendingMessage && (
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>{pendingMessage}</Text>
+          {decryptionProgress > 0 && (
+            <>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${Math.min(decryptionProgress, 100)}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressPercentage}>
+                {Math.round(decryptionProgress)}%
+              </Text>
+            </>
+          )}
+        </View>
+      )}
+
       <TouchableOpacity
         style={[
           styles.button,
@@ -141,23 +197,18 @@ export default function WalletRestore(props: {
         onPress={handleRestoreWallet}
         disabled={pendingMessage !== null || !password}
       >
-        <Text
-          style={styles.buttonText}
-          className="text-white font-medium text-center"
-        >
-          {pendingMessage ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <ActivityIndicator
-                size="small"
-                color="#ffffff"
-                style={{ marginRight: 10 }}
-              />
-              <Text style={styles.buttonText}>{pendingMessage + '...'}</Text>
-            </View>
-          ) : (
-            <Text style={styles.buttonText}>Decrypt Wallet</Text>
-          )}
-        </Text>
+        {pendingMessage ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator
+              size="small"
+              color="#ffffff"
+              style={{ marginRight: 10 }}
+            />
+            <Text style={styles.buttonText}>{pendingMessage}</Text>
+          </View>
+        ) : (
+          <Text style={styles.buttonText}>Decrypt Wallet</Text>
+        )}
       </TouchableOpacity>
 
       {attemptCount > 2 && (
@@ -244,5 +295,39 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#a5d6a7',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressContainer: {
+    marginTop: 20,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  progressBar: {
+    width: '100%',
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+    borderRadius: 3,
+  },
+  progressPercentage: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
   },
 });

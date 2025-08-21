@@ -4,8 +4,8 @@ import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
 import { SafeAreaView } from 'react-native';
+import { hostService } from '../services/hostService';
 import WalletCreateNew from './create';
-import { hostService } from './hostService';
 import SetupProgress from './progress';
 import WalletRestore from './restore';
 
@@ -31,7 +31,7 @@ export default function WalletSetupScreen() {
     const wallet = await hostService.getWallet('TODO_temp');
     if (wallet) {
       setWallet(wallet);
-      router.push('/lock');
+      router.push('/home');
       return;
     }
 

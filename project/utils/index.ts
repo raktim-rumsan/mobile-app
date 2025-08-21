@@ -1,6 +1,6 @@
 import { iHostService } from '@/core/types/iHostService';
 
-const storage = (setup: iHostService) => ({
+export const AppStorage = (setup: iHostService) => ({
   set: async (name: string, value: Record<string, any> | string) => {
     await setup.storeData(name, value, 'appService');
   },
@@ -8,7 +8,3 @@ const storage = (setup: iHostService) => ({
     return await setup.getData(name, 'appService');
   },
 });
-
-export const _utils = {
-  storage,
-};

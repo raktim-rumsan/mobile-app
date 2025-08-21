@@ -38,12 +38,27 @@ export default function TabLayout() {
     {
       path: 'receipt/form',
       title: 'Receipt Form',
-      headerShown: true,
+      headerShown: false,
+    },
+    {
+      path: 'receipt/create',
+      title: 'Receipt Create',
+      headerShown: false,
+    },
+    {
+      path: 'receipt/detail',
+      title: 'Receipt Detail',
+      headerShown: false,
+    },
+    {
+      path: 'receipt/edit',
+      title: 'Receipt Edit',
+      headerShown: false,
     },
   ];
-  const hiddenHeaders = ['/receipt/camera', '/receipt/preview'];
+  const hiddenHeaders = ['/receipt/create', '/receipt/preview'];
   const hiddenFooters = [
-    '/receipt/camera',
+    '/receipt/create',
     '/receipt/preview',
     '/receipt/form',
     '/scanner',
@@ -127,11 +142,10 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="receipt/camera"
+          name="receipt/list"
           options={{
             tabBarLabel: ({ color, focused }) => <Text />,
             headerShown: false,
-            tabBarStyle: { display: 'none' },
             tabBarIcon: ({ color, focused }) => (
               <View className="items-center justify-center">
                 <ReceiptRefundIcon

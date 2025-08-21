@@ -1,17 +1,20 @@
 import { Text } from '@/components/ui';
 import { useAlertPopup } from '@/core/context/AlertPopupProvider';
 import { useApp } from '@/core/context/AppContext';
+import { useThemeColor } from '@/core/hooks/useThemeColor';
 import { useAppServicePlugin } from '@/plugins/pluginFactory';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { hostService } from './hostService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { hostService } from '../services/hostService';
 
 export default function LockScreen() {
   const { wallet, setWallet, isLocked, setIsLocked } = useApp();
   const { showError, showInfo, showWarning } = useAlertPopup();
   const appService = useAppServicePlugin(hostService);
 
+  const backgroundColor = useThemeColor({}, 'background');
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,7 +31,7 @@ export default function LockScreen() {
   // }, [isMounted, wallet]);
 
   return (
-    <>
+    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <View
         className="flex-1 p-6 w-full self-center"
         style={{ justifyContent: 'center', alignItems: 'center' }}
@@ -77,7 +80,7 @@ export default function LockScreen() {
           <Text className="ml-4 text-black font-medium">Unlock Wallet</Text>
         </Pressable>
       </View>
-    </>
+    </SafeAreaView>
   );
 }
 

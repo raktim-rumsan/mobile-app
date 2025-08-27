@@ -5,6 +5,8 @@ const AppContext = createContext<
   | {
       wallet?: Wallet | null;
       setWallet: (newWallet: Wallet | null) => void;
+      setCache: (group: string, key: string, data: Record<string, any>) => void;
+      getCache: (group: string, key: string) => Record<string, any> | undefined;
       throwError: (message: string) => void;
       isLocked: boolean;
       setIsLocked: (locked: boolean) => void;
@@ -23,6 +25,18 @@ export function useApp() {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [wallet, setWallet] = useState<Wallet | null | undefined>(undefined);
   const [isLocked, setIsLocked] = useState<boolean>(true);
+  const [cacheData, setCacheData] = useState<any>({});
+
+  const setCache = (group: string, key: string, data: Record<string, any>) => {
+    setCacheData((prev: Record<string, any>) => ({
+      ...prev,
+      [group + key]: data,
+    }));
+  };
+
+  const getCache = (group: string, key: string): Record<string, any> => {
+    return cacheData[group + key];
+  };
 
   const throwError = (message: string) => {
     console.log(message);
@@ -33,6 +47,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         wallet,
         setWallet,
+        setCache,
+        getCache,
         throwError,
         isLocked,
         setIsLocked,

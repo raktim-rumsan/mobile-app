@@ -1,5 +1,5 @@
 import ApiService from '@/core/services/apiService';
-import { hostService } from '@/core/services/hostService';
+import { useHostService } from '@/core/services/hostService';
 import { AuthClient } from '@/rumsan/clients/auth.client';
 import { router } from 'expo-router';
 import { AppStorage } from '../utils';
@@ -9,6 +9,7 @@ import { ReceiptClient } from './receipt.client';
 export const AuthService = new AuthClient(ApiService.client);
 
 export const getServices = async () => {
+  const hostService = useHostService();
   const _store = AppStorage(hostService);
   const token = await _store.get('token');
   if (!token) {

@@ -11,25 +11,25 @@ export const LoadingScreen = ({
 }: LoadingScreenProps) => {
   const theme = useColorScheme();
   return (
-    <View className="flex-1 justify-start items-center">
-      <View className="items-center mt-80">
+    <View className="flex-1 justify-center items-center px-6">
+      <View className="items-center flex-1 justify-center">
         <Image
           source={
             theme === 'dark'
               ? require('@/assets/images/icon-white.png')
               : require('@/assets/images/icon-white.png')
           }
-          className="h-48 w-48"
+          className="h-32 w-32 mb-8"
           style={{
-            width: 600,
-            height: 600,
+            width: 128,
+            height: 128,
             resizeMode: 'contain',
           }}
         />
-      </View>
-      <View className="items-center mt-auto mb-60">
         <ActivityIndicator size="large" color="#4285F4" />
-        {message && <Text className="mt-4 text-center">{message}</Text>}
+        {message && (
+          <Text className="mt-4 text-center text-gray-600">{message}</Text>
+        )}
       </View>
     </View>
   );

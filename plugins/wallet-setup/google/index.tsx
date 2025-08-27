@@ -1,4 +1,4 @@
-// hooks/useGoogleDriveSetup.ts
+// hooks/useGoogleDrivehost.ts
 import { iHostService, TLog } from '@/core/types/iHostService';
 import { iWalletPlugin } from '@/core/types/iWalletPlugin';
 import { AuthUser } from '@/core/utils/middleware';
@@ -29,7 +29,7 @@ const config: AuthRequestConfig = {
   redirectUri: makeRedirectUri(),
 };
 
-export function useGoogleDriveSetup(setup: iHostService): iWalletPlugin {
+export function useGoogleDriveSetup(host: iHostService): iWalletPlugin {
   const [user, setUser] = React.useState<AuthUser | null>(null);
   const [request, response, promptAsync] = useAuthRequest(config, discovery);
   const [authToken, setAuthTokenState] = useState<string | null>(null);
@@ -42,17 +42,17 @@ export function useGoogleDriveSetup(setup: iHostService): iWalletPlugin {
     name: string,
     value: Record<string, any> | string,
   ) => {
-    await setup.storeData(name, value, 'gDrive');
+    await host.storeData(name, value, 'gDrive');
   };
 
   const getData = async (name: string) => {
-    return await setup.getData(name, 'gDrive');
+    return await host.getData(name, 'gDrive');
   };
 
   const signIn = async () => {
     try {
       if (!request) return;
-      // const authData = await setup.getData('authData');
+      // const authData = await host.getData('authData');
       // if (authData && authData.access_token) {
       //   checkToken(authData);
       //   return;
@@ -64,8 +64,8 @@ export function useGoogleDriveSetup(setup: iHostService): iWalletPlugin {
         const authData = await GoogleApis.getJwtToken(code);
         await storeData('authData', authData);
         // const wallet = Wallet.createRandom();
-        // setup.setWallet(wallet);
-        setup.navigateToWalletSetup();
+        // host.setWallet(wallet);
+        host.navigateToWalletSetup();
       } else if (result.type === 'cancel') {
         alert('Sign in cancelled');
       } else if (result.type === 'error') {
@@ -79,30 +79,22 @@ export function useGoogleDriveSetup(setup: iHostService): iWalletPlugin {
   const getWalletBackupData = async (options?: {
     log?: TLog;
   }): Promise<string | null> => {
-    try {
-      const authData = await getData('authData');
-      if (!authData || !authData.access_token) {
-        throw new Error('No access token found. Please sign in first.');
-      }
-      const { folderId, walletFileId } = await GoogleApis.getBackupWalletInfo(
-        authData.access_token,
-        options?.log,
-      );
-      setFolderId(folderId);
-      return walletFileId;
-      // const folderId = await getBackupFolderId(authData.access_token);
-      // if (!folderId) {
-      //   throw new Error('No backup folder found');
-      // }
-      // const walletBackup = await getEncryptedWalletFromBackup(
-      //   authData.access_token,
-      //   folderId,
-      // );
-      // return walletBackup ? walletBackup.content : null;
-    } catch (e) {
-      setError(e as Error);
-      return null;
+    const authData = await getData('authData');
+    if (!authData || !authData.access_token) {
+      throw new Error('No access token found. Please sign in first.');
     }
+    const { folderId, walletFileId } = await GoogleApis.getBackupWalletInfo(
+      authData.access_token,
+      options?.log,
+    );
+
+    await storeData('folderId', folderId);
+    if (walletFileId) {
+      await storeData('walletFileId', walletFileId);
+    }
+
+    setFolderId(folderId);
+    return walletFileId;
   };
 
   const createAndBackupWallet = async (
@@ -139,21 +131,29 @@ export function useGoogleDriveSetup(setup: iHostService): iWalletPlugin {
     if (!authData || !authData.access_token) {
       throw new Error('No access token found. Please sign in first.');
     }
-    if (!folderId) {
+
+    const walletFileId = (await getData('walletFileId'))?.toString();
+
+    if (!walletFileId) {
       throw new Error(
-        'No backup folder ID found. Please get backup folder ID first.',
+        'No backup wallet file ID found. Please get backup wallet file ID first.',
       );
     }
 
-    return GoogleApis.getEncryptedWallet(authData.access_token, folderId);
+    return GoogleApis.getEncryptedWallet(authData.access_token, walletFileId);
   };
 
   const archiveEncryptedWallet = async (archiveName: string) => {
     const authData = await getData('authData');
-
+    console.log('Archiving encrypted wallet with name:', archiveName);
     if (!authData || !authData.access_token) {
       throw new Error('No access token found. Please sign in first.');
     }
+
+    const { folderId } = await GoogleApis.getBackupWalletInfo(
+      authData.access_token,
+    );
+
     if (!folderId) {
       throw new Error(
         'No backup folder ID found. Please get backup folder ID first.',

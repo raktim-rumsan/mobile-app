@@ -1,7 +1,10 @@
+// Import polyfills first
+import '@/core/utils/polyfills';
+
 import { LoadingScreen } from '@/components/LoadingScreen';
 import LandingScreen from '@/core/screens';
 import WalletSetupScreen from '@/core/screens/wallet';
-import { hostService } from '@/core/services/hostService';
+import { useHostService } from '@/core/services/hostService';
 import { Mnemonic, Wallet } from 'ethers';
 import React, { useEffect, useState } from 'react';
 
@@ -13,11 +16,17 @@ interface WalletData {
 export default function LandingPage() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { getWallet } = useHostService();
 
   useEffect(() => {
     async function fetchWallet() {
-      const walletData = await hostService.getWallet();
-      setWallet(walletData);
+      //TODO
+      const walletObj = await getWallet('TEMP');
+      if (walletObj) {
+        setWallet({ wallet: walletObj });
+      } else {
+        setWallet(null);
+      }
       setTimeout(() => {
         setLoading(false);
       }, 1000);

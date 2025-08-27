@@ -14,15 +14,15 @@ import { getWalletBackupProvider } from '@/plugins/pluginFactory';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions } from 'react-native';
-import { hostService } from '../services/hostService';
+import { useHostService } from '../services/hostService';
 
 export default function LandingScreen() {
+  const hostService = useHostService();
   const useWalletSetup = getWalletBackupProvider(hostService);
   const walletSetup = useWalletSetup();
   const { wallet } = useApp();
   const screenWidth = Dimensions.get('window').width;
   const logoSize = Math.min(screenWidth * 0.5, 200); // Responsive logo size
-  console.log('test');
 
   // Redirect to home if already authenticated
   // React.useEffect(() => {

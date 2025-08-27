@@ -48,7 +48,6 @@ export default function HomeScreen() {
     >
       {/* Quick Actions */}
       <Box className="rounded-xl p-2 mt-4">
-        <Text className="font-bold text-base mb-3">Demo</Text>
         <VStack className="space-y-2">
           {links.map((link, index) => (
             <Pressable key={index} onPress={link.onPress}>

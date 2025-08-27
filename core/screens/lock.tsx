@@ -7,11 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { hostService } from '../services/hostService';
+import { useHostService } from '../services/hostService';
 
 export default function LockScreen() {
   const { wallet, setWallet, isLocked, setIsLocked } = useApp();
   const { showError, showInfo, showWarning } = useAlertPopup();
+  const hostService = useHostService();
   const appService = useAppServicePlugin(hostService);
 
   const backgroundColor = useThemeColor({}, 'background');

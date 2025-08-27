@@ -32,6 +32,12 @@ export default function TabLayout() {
     footerShown?: boolean;
   }[] = [
     {
+      path: 'demo',
+      title: 'Demo',
+      headerShown: false,
+      footerShown: true,
+    },
+    {
       path: 'receipt/preview',
       title: 'Receipt Preview',
     },

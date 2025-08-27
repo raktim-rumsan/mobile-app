@@ -1,9 +1,9 @@
-// Import the crypto getRandomValues shim (**BEFORE** the shims)
-import 'react-native-get-random-values';
+// Import polyfills first
+import '@/core/utils/polyfills';
 
 // Import the the ethers shims (**BEFORE** ethers)
 import { TLog } from '@/core/types/iHostService';
-import '@ethersproject/shims';
+import { truncateAddress } from '@/core/utils/string.utils';
 import { format } from 'date-fns';
 import { ethers } from 'ethers';
 import {
@@ -59,7 +59,6 @@ export const GoogleApis = {
       {
         isFolder: false,
         parentFolderId: folderId,
-        log,
       },
     );
     if (walletFileId) {
@@ -78,12 +77,15 @@ export const GoogleApis = {
       BACKUP_FOLDER_NAME,
       {
         isFolder: true,
-        log,
       },
     );
 
     if (existingFolder) {
-      log?.(`Found existing folder: ${BACKUP_FOLDER_NAME}: ${existingFolder}`);
+      log?.(
+        `Found existing folder: ${BACKUP_FOLDER_NAME}: ${truncateAddress(
+          existingFolder,
+        )}`,
+      );
       return existingFolder;
     }
 
@@ -142,7 +144,7 @@ export const GoogleApis = {
     return fileId;
   },
 
-  getEncryptedWallet: async (
+  getEncryptedWalletInFolder: async (
     accessToken: string,
     folderId: string,
   ): Promise<{ fileId: string; content: string } | null> => {
@@ -151,6 +153,19 @@ export const GoogleApis = {
       folderId,
     );
 
+    if (!fileId) {
+      return null;
+    }
+
+    // Download the file
+    const content = await downloadTextFile(accessToken, fileId);
+    return { fileId, content };
+  },
+
+  getEncryptedWallet: async (
+    accessToken: string,
+    fileId: string,
+  ): Promise<{ fileId: string; content: string } | null> => {
     if (!fileId) {
       return null;
     }
@@ -174,10 +189,8 @@ export const GoogleApis = {
       return null;
     }
 
-    // Rename the file to archive it
-    const newFileName = `${BACKUP_FILE_NAME}|${archiveName}`;
-    await renameObject(accessToken, fileId, newFileName);
-    return newFileName;
+    await renameObject(accessToken, fileId, archiveName);
+    return archiveName;
   },
 };
 

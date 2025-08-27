@@ -1,25 +1,40 @@
-import { Text } from '@/components/ui';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { View } from '@/components/Themed';
+import {
+  Box,
+  Button,
+  ButtonText,
+  Heading,
+  HStack,
+  Input,
+  InputField,
+  Progress,
+  ProgressFilledTrack,
+  SafeAreaView,
+  Text,
+  VStack,
+} from '@/components/ui';
 import { WALLET_INFO } from '@/core/constants/wallet';
 import { iWalletPlugin } from '@/core/types/iWalletPlugin';
-import { Wallet } from 'ethers';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useHostService } from '../services/hostService';
 import {
-  ActivityIndicator,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { hostService } from '../services/hostService';
+  AsyncWalletDecryption,
+  DecryptionProgress,
+} from '../services/nonBlockingDecryption';
+import { AppError } from '../utils/error';
 
 export default function WalletRestore(props: {
   walletSetup: iWalletPlugin;
+  address: string | null;
   createNewWallet: (archiveFileName?: string) => void;
 }) {
+  const { setWallet } = useHostService();
+
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [address, setAddress] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [encryptedWallet, setEncryptedWallet] = useState<{
     fileId: string;
@@ -27,28 +42,18 @@ export default function WalletRestore(props: {
   } | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
   const [decryptionProgress, setDecryptionProgress] = useState(0);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const decryptionService = useRef(AsyncWalletDecryption.getInstance());
 
   const getEncryptedWallet = useCallback(async () => {
     setPendingMessage('Fetching wallet from backup...');
     const _encryptedWallet =
       await props.walletSetup.getEncryptedWalletFromBackup();
-
-    if (!_encryptedWallet) {
-      console.log('No encrypted wallet found in backup.');
-      return;
-    }
-
-    try {
-      const encryptedWalletJson = JSON.parse(_encryptedWallet.content);
-      setAddress(encryptedWalletJson.address);
-    } catch (error) {
-      console.error('Error parsing encrypted wallet JSON:', error);
-      return;
-    }
+    if (!_encryptedWallet) return;
 
     setEncryptedWallet(_encryptedWallet);
     setPendingMessage(null);
-  }, []);
+  }, [props.walletSetup]);
 
   const handleRestoreWallet = async () => {
     if (!encryptedWallet) {
@@ -61,273 +66,226 @@ export default function WalletRestore(props: {
     }
 
     setPasswordError('');
+    setIsDecrypting(true);
+    setPendingMessage('Decrypting wallet...');
     setDecryptionProgress(0);
-    setPendingMessage('Initializing decryption...');
-
-    // Simulate progress updates
-    const progressInterval = setInterval(() => {
-      setDecryptionProgress((prev) => {
-        if (prev >= 90) return prev; // Don't go to 100% until actually done
-        return prev + Math.random() * 10;
-      });
-    }, 200);
 
     try {
-      // Add timeout for decryption process (30 seconds)
-      const decryptionPromise = Wallet.fromEncryptedJson(
+      const wallet = await decryptionService.current.decryptWallet(
         encryptedWallet.content,
         password,
+        (progress: DecryptionProgress) => {
+          setDecryptionProgress(progress.progress);
+          setPendingMessage(progress.message || 'Decrypting wallet...');
+        },
       );
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Decryption timeout')), 30000),
-      );
+      // Set the wallet in host service
+      await setWallet(wallet);
 
-      setPendingMessage('Decrypting wallet...');
-      const wallet = (await Promise.race([
-        decryptionPromise,
-        timeoutPromise,
-      ])) as Wallet;
-
-      clearInterval(progressInterval);
-      setDecryptionProgress(100);
-      setPendingMessage('Setting up wallet...');
-      await hostService.setWallet(wallet);
-
-      setPendingMessage('Redirecting...');
+      // Navigate to home
       router.push('/home');
     } catch (error) {
-      clearInterval(progressInterval);
-      setDecryptionProgress(0);
-      console.error('Wallet restoration error:', error);
-      setAttemptCount((prev) => prev + 1);
-
-      const errorMessage =
-        error instanceof Error && error.message === 'Decryption timeout'
-          ? 'Decryption is taking too long. Please try again.'
-          : 'Failed to restore wallet. Please check your password.';
-
-      setPasswordError(`${errorMessage} Attempt: ${attemptCount + 1}`);
+      if (error instanceof AppError) {
+        if (error.isAuthenticationError) router.push('/');
+      }
+      setPasswordError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to restore wallet. Please try again.',
+      );
+    } finally {
+      setIsDecrypting(false);
       setPendingMessage(null);
-      return;
     }
-
-    setPendingMessage(null);
-    setDecryptionProgress(0);
   };
-
-  const archiveWalletAndCreateNew = useCallback(async () => {
-    if (!encryptedWallet) {
-      console.error('No encrypted wallet to archive.');
-      return;
-    }
-    if (!address) {
-      console.error('No wallet address found to archive.');
-      return;
-    }
-    const archiveName = await props.walletSetup.archiveEncryptedWallet(address);
-    if (!archiveName) {
-      console.error('Failed to archive the wallet.');
-      return;
-    }
-    props.createNewWallet(archiveName);
-  }, [address, encryptedWallet, props]);
-
   useEffect(() => {
     getEncryptedWallet();
   }, [getEncryptedWallet]);
 
-  return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={styles.heading}>Restore Existing Wallet</Text>
-      <Text className="mt-4 text-center">
-        Existing backup wallet found. Let&#39;s restore it.
-      </Text>
-      {address && (
-        <Text className="m-2 text-center">
-          Wallet Address: <Text className="font-medium">{address}</Text>
-        </Text>
-      )}
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Password..."
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      {passwordError ? (
-        <Text style={{ color: 'red', marginTop: 5 }}>{passwordError}</Text>
-      ) : (
-        <Text style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
-          The password will be used to decrypt your wallet. It is more than 4
-          characters long.
-        </Text>
-      )}
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      decryptionService.current.cancel();
+    };
+  }, []);
 
-      {pendingMessage && (
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>{pendingMessage}</Text>
-          {decryptionProgress > 0 && (
-            <>
-              <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${Math.min(decryptionProgress, 100)}%` },
-                  ]}
-                />
-              </View>
-              <Text style={styles.progressPercentage}>
-                {Math.round(decryptionProgress)}%
-              </Text>
-            </>
-          )}
-        </View>
-      )}
-
-      <TouchableOpacity
-        style={[
-          styles.button,
-          (pendingMessage && styles.disabledButton) ||
-          !password ||
-          password.length < 4
-            ? styles.disabledButton
-            : {},
-        ]}
-        onPress={handleRestoreWallet}
-        disabled={pendingMessage !== null || !password}
-      >
-        {pendingMessage ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator
-              size="small"
-              color="#ffffff"
-              style={{ marginRight: 10 }}
-            />
-            <Text style={styles.buttonText}>{pendingMessage}</Text>
-          </View>
-        ) : (
-          <Text style={styles.buttonText}>Decrypt Wallet</Text>
-        )}
-      </TouchableOpacity>
-
-      {attemptCount > 2 && (
-        <>
-          <TouchableOpacity
-            style={[styles.createButton]}
-            onPress={archiveWalletAndCreateNew}
-          >
-            <Text
-              style={styles.buttonText}
-              className="text-white font-medium text-center"
+  if (isDecrypting) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <LoadingScreen message={pendingMessage || 'Decrypting wallet...'} />
+        <Box className="absolute bottom-24 left-5 right-5">
+          <VStack space="md" className="items-center">
+            <Progress
+              value={Math.min(decryptionProgress, 100)}
+              size="md"
+              className="w-full"
             >
-              <Text style={styles.buttonText}>Create New Wallet</Text>
+              <ProgressFilledTrack className="bg-green-500" />
+            </Progress>
+            <Text size="sm" className="text-typography-700 font-medium">
+              {Math.round(decryptionProgress)}% Complete
             </Text>
-          </TouchableOpacity>
-          <Text
-            style={{ fontSize: 12, color: '#666' }}
-            className="mt-1 text-center"
+          </VStack>
+        </Box>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-background-0 px-2 py-16">
+      <VStack space="xl" className="flex-1 p-6">
+        {/* Header Section */}
+        <VStack space="md" className="items-center mt-8">
+          <Box className="w-20 h-20 bg-green-100 rounded-full items-center justify-center mb-4">
+            <Ionicons name="wallet-outline" size={32} color="#22C55E" />
+          </Box>
+          <Heading
+            size="2xl"
+            className="text-typography-900 text-center font-bold"
           >
-            The existing wallet will be renamed to{' '}
-            <Text style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
-              {WALLET_INFO.BACKUP_FILE_NAME}|{address}
-            </Text>
-            .
+            Restore Wallet
+          </Heading>
+          <Text
+            size="md"
+            className="text-typography-700 text-center leading-relaxed"
+          >
+            Enter your password to decrypt and restore your existing wallet
           </Text>
-        </>
-      )}
+        </VStack>
+
+        {/* Wallet Info Card */}
+        {props.address && (
+          <Box className="bg-white border border-gray-200 rounded-xl p-4">
+            <VStack space="sm">
+              <Text size="sm" className="text-green-600 font-medium">
+                Wallet Address Found:
+              </Text>
+              <Text
+                size="sm"
+                className="text-typography-900 font-mono break-all"
+              >
+                {props.address}
+              </Text>
+            </VStack>
+          </Box>
+        )}
+
+        {/* Input Section */}
+        <VStack space="lg" className="flex-1">
+          <VStack space="md">
+            <Box className="bg-white border border-gray-200 rounded-xl">
+              <Input size="lg" variant="outline" className="border-0">
+                <InputField
+                  placeholder="Enter your password"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={(text: string) => {
+                    setPassword(text);
+                  }}
+                  className="text-typography-900 p-4"
+                />
+              </Input>
+            </Box>
+
+            {passwordError ? (
+              <HStack space="sm" className="items-center">
+                <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                <Text size="sm" className="text-red-600 flex-1">
+                  {passwordError}
+                </Text>
+              </HStack>
+            ) : (
+              <HStack space="sm" className="items-center">
+                <Ionicons
+                  name="information-circle-outline"
+                  size={16}
+                  color="#6B7280"
+                />
+                <Text size="sm" className="text-typography-500 flex-1">
+                  Password must be at least 4 characters long
+                </Text>
+              </HStack>
+            )}
+          </VStack>
+
+          {/* Action Buttons */}
+          <VStack space="md" className="mt-auto">
+            <Button
+              size="lg"
+              action={
+                !password || password.length < 4 ? 'secondary' : 'positive'
+              }
+              variant="solid"
+              disabled={!password || isDecrypting || password.length < 4}
+              onPress={handleRestoreWallet}
+              className="rounded-xl bg-green-500 disabled:bg-gray-300"
+            >
+              {pendingMessage && !isDecrypting ? (
+                <HStack space="sm" className="items-center">
+                  <Ionicons name="hourglass-outline" size={20} color="white" />
+                  <ButtonText className="font-semibold text-white">
+                    {pendingMessage}
+                  </ButtonText>
+                </HStack>
+              ) : (
+                <HStack space="sm" className="items-center">
+                  <Ionicons name="lock-open-outline" size={20} color="white" />
+                  <ButtonText className="font-semibold text-white">
+                    Decrypt Wallet
+                  </ButtonText>
+                </HStack>
+              )}
+            </Button>
+
+            {attemptCount > 0 && (
+              <VStack space="md">
+                <Button
+                  size="lg"
+                  action="secondary"
+                  variant="outline"
+                  onPress={() =>
+                    props.createNewWallet(
+                      `${WALLET_INFO.BACKUP_FILE_NAME}|${props.address}`,
+                    )
+                  }
+                  className="rounded-xl border-blue-500 bg-white"
+                >
+                  <HStack space="sm" className="items-center">
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={20}
+                      color="#3B82F6"
+                    />
+                    <ButtonText className="font-semibold text-blue-500">
+                      Create New Wallet
+                    </ButtonText>
+                  </HStack>
+                </Button>
+
+                <Box className="bg-white border border-gray-200 rounded-xl p-3">
+                  <HStack space="sm" className="items-start">
+                    <Ionicons
+                      name="information-circle-outline"
+                      size={16}
+                      color="#6B7280"
+                    />
+                    <Text
+                      size="xs"
+                      className="text-typography-500 flex-1 leading-relaxed"
+                    >
+                      The existing wallet will be renamed to{' '}
+                      <Text className="font-semibold italic">
+                        {WALLET_INFO.BACKUP_FILE_NAME}|{props.address}
+                      </Text>
+                    </Text>
+                  </HStack>
+                </Box>
+              </VStack>
+            )}
+          </VStack>
+        </VStack>
+      </VStack>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 20,
-  },
-  contentContainer: {
-    alignItems: 'flex-start',
-    width: '100%',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginVertical: 5,
-    width: '100%',
-  },
-  checkmark: {
-    fontSize: 18,
-    color: '#4CAF50',
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 4,
-    marginTop: 16,
-  },
-  createButton: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 4,
-    marginTop: 48,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  disabledButton: {
-    backgroundColor: '#a5d6a7',
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressContainer: {
-    marginTop: 20,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  progressBar: {
-    width: '100%',
-    height: 6,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 3,
-  },
-  progressPercentage: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-});

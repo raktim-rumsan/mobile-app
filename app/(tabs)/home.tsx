@@ -2,13 +2,15 @@ import { LoadingScreen } from '@/components/LoadingScreen';
 import { useApp } from '@/core/context/AppContext';
 import HomeScreen from '@/core/screens/home';
 import LockScreen from '@/core/screens/lock';
-import { hostService } from '@/core/services/hostService';
+import { useHostService } from '@/core/services/hostService';
 import { useAppServicePlugin } from '@/plugins/pluginFactory';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const { isLocked, setIsLocked } = useApp();
+  const hostService = useHostService();
+
   const appService = useAppServicePlugin(hostService);
 
   useEffect(() => {

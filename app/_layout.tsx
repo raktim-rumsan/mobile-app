@@ -83,15 +83,15 @@ function RootLayoutNav() {
         <ThemeProvider
           value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-          <QueryClientProvider client={queryClient}>
-            <AppProvider>
+          <AppProvider>
+            <QueryClientProvider client={queryClient}>
               <CameraProvider>
                 <AlertPopupProvider>
                   <AppLayout />
                 </AlertPopupProvider>
               </CameraProvider>
-            </AppProvider>
-          </QueryClientProvider>
+            </QueryClientProvider>
+          </AppProvider>
         </ThemeProvider>
       </GluestackUIProvider>
     </AuthProvider>

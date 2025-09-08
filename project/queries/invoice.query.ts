@@ -1,5 +1,5 @@
 import { queryClient } from '@/core/utils/query.client';
-import { getServices } from '@/project/services';
+import { useGetServices } from '@/project/services';
 import { Invoice } from '@/project/types/invoice.type';
 import { PaginationQuery } from '@rumsan/sdk/types';
 import { FormattedResponse } from '@rumsan/sdk/utils';
@@ -15,11 +15,13 @@ export const useReceiptList = (
   },
   Error
 > => {
+  const getServicesWithHost = useGetServices();
+
   return useQuery(
     {
       queryKey: ['invoice_list', JSON.stringify(pageQuery)],
       queryFn: async () => {
-        const services = await getServices();
+        const services = await getServicesWithHost();
         const { response } = (await services?.Receipt.myReceipts(
           pageQuery,
         )) as FormattedResponse<Invoice[]>;
@@ -37,11 +39,13 @@ export const useReceiptList = (
 export const useGetInvoice = (
   id: string,
 ): UseQueryResult<Invoice | null, Error> => {
+  const getServicesWithHost = useGetServices();
+
   return useQuery(
     {
       queryKey: ['invoice_get', id],
       queryFn: async () => {
-        const services = await getServices();
+        const services = await getServicesWithHost();
         const { response } = (await services?.Receipt.get(
           id,
         )) as FormattedResponse<Invoice>;
@@ -54,10 +58,12 @@ export const useGetInvoice = (
 };
 
 export const useCreateInvoice = () => {
+  const getServicesWithHost = useGetServices();
+
   return useMutation(
     {
       mutationFn: async (payload: any) => {
-        const services = await getServices();
+        const services = await getServicesWithHost();
         const { response } = (await services?.Receipt.create(
           payload,
         )) as FormattedResponse<Invoice>;
@@ -83,10 +89,12 @@ export const useCreateInvoice = () => {
 };
 
 export const useUpdateInvoice = () => {
+  const getServicesWithHost = useGetServices();
+
   return useMutation(
     {
       mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
-        const services = await getServices();
+        const services = await getServicesWithHost();
         const { response } = (await services?.Receipt.update(
           id,
           payload,

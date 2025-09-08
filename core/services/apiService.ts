@@ -11,6 +11,21 @@ export class ApiClient {
 
   private constructor(config: CreateAxiosDefaults) {
     this.client = axios.create(config);
+
+    // Set up response interceptor to handle authentication errors
+    // this.client.interceptors.response.use(
+    //   (response) => response,
+    //   (error) => {
+    //     const statusCode = error?.response?.status;
+    //     if (statusCode === 401 || statusCode === 403) {
+    //       console.log(
+    //         'Authentication error detected in axios interceptor, redirecting to /lock',
+    //       );
+    //       router.replace('/lock');
+    //     }
+    //     return Promise.reject(error);
+    //   },
+    // );
   }
 
   public static getInstance(config: CreateAxiosDefaults = {}): ApiClient {

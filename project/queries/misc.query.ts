@@ -1,6 +1,6 @@
 import { queryClient } from '@/core/utils/query.client';
 import { useQuery } from '@tanstack/react-query';
-import { getServices } from '../services';
+import { useGetServices } from '../services';
 import { LookupData } from '../types/misc.type';
 
 const selectOptionsData = <T extends keyof LookupData>(
@@ -69,23 +69,26 @@ type LookupListResult = {
 };
 
 export const useLookupList = () => {
+  const getServicesWithHost = useGetServices();
+
   return useQuery(
     {
       queryKey: ['lookup_list'],
       queryFn: async () => {
-        const services = await getServices();
+        const services = await getServicesWithHost();
+        console.log(services);
         const { data } = await services.Misc.getLookupData();
         return {
           data,
           selectData: selectOptionsData(data),
           lookupByCuid: (group: keyof LookupData, cuid: string) =>
-            data ? data[group]?.find((item) => item.cuid === cuid) : null,
+            data ? data[group]?.find((item: any) => item.cuid === cuid) : null,
         };
       },
-      staleTime: Infinity, // Data will never become stale automatically
-      refetchOnMount: false, // Don't refetch when component mounts
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus
-      refetchOnReconnect: false, // Don't refetch when reconnecting
+      // staleTime: Infinity, // Data will never become stale automatically
+      // refetchOnMount: false, // Don't refetch when component mounts
+      // refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      // refetchOnReconnect: false, // Don't refetch when reconnecting
     },
     queryClient,
   );

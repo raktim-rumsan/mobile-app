@@ -91,9 +91,18 @@ export default function Camera({ onBackPress }: CameraProps) {
             onMountError={(error) => {
               console.error('Camera mount error:', error);
             }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <CameraFrameDocument onSnap={takePicture} onClose={onBackPress} />
-          </CameraView>
+          </View>
         </>
       )}
     </View>

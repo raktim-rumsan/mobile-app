@@ -11,6 +11,7 @@ export class MiscClient {
   }
 
   async getLookupData(config?: AxiosRequestConfig) {
+    console.log('Fetching lookup data...');
     const response = await this._client.get(`${this._prefix}/lookup`, config);
     return formatResponse<LookupData>(response);
   }

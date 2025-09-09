@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile-app",
+    "name": "Rumsan Wallet",
     "slug": "rumsan-wallet",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -30,14 +30,35 @@
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
-      "permissions": ["ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE"]
+      "permissions": [
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "react-native-permissions",
+        {
+          "iosPermissions": [
+            "NSCameraUsageDescription",
+            "NSLocationWhenInUseUsageDescription",
+            "NSPhotoLibraryUsageDescription",
+            "NSMicrophoneUsageDescription",
+            "NSFaceIDUsageDescription"
+          ]
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },

@@ -8,50 +8,230 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Platform } from 'react-native';
+import { Alert, Linking, PermissionsAndroid, Platform } from 'react-native';
 import {
   DevicePhoneMobileIcon,
   ExclamationTriangleIcon,
   GlobeAltIcon,
   MapPinIcon,
-  SignalIcon,
   WifiIcon,
 } from 'react-native-heroicons/outline';
+import { NetworkInfo } from 'react-native-network-info';
 
-// Simple network detection without external dependencies
+// Unified network and WiFi information getter
+async function getNetworkInfo() {
+  try {
+    if (Platform.OS === 'android') {
+      // Check location permission for WiFi SSID
+      const hasPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+
+      if (!hasPermission) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission Required',
+            message: 'This app needs location access to get WiFi information',
+            buttonPositive: 'OK',
+            buttonNegative: 'Cancel',
+          },
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          return {
+            ssid: 'Permission denied',
+            bssid: null,
+            ipAddress: 'Permission required',
+            error: 'Location permission denied',
+          };
+        }
+      }
+
+      // Get WiFi info for Android
+      const ssid = await NetworkInfo.getSSID();
+      const bssid = await NetworkInfo.getBSSID();
+      const ipAddress = await NetworkInfo.getIPV4Address();
+
+      return { ssid, bssid, ipAddress };
+    } else if (Platform.OS === 'ios') {
+      // Get WiFi info for iOS
+      const ssid = await NetworkInfo.getSSID();
+      const bssid = await NetworkInfo.getBSSID();
+      const ipAddress = await NetworkInfo.getIPV4Address();
+
+      return { ssid, bssid, ipAddress };
+    } else if (Platform.OS === 'web') {
+      // Web platform limitations
+      return {
+        ssid: navigator.onLine ? 'Connected (web browser)' : 'Not connected',
+        bssid: 'Not available in browser',
+        ipAddress: 'Not available in browser',
+      };
+    }
+
+    return {
+      ssid: 'Platform not supported',
+      bssid: null,
+      ipAddress: null,
+    };
+  } catch (error: any) {
+    console.error('Error getting network info:', error);
+    return {
+      ssid: 'Error getting WiFi info',
+      bssid: null,
+      ipAddress: 'Error',
+      error: error?.message || 'Unknown error',
+    };
+  }
+}
+
+// Simple internet connectivity check
 const checkInternetConnection = async (): Promise<boolean> => {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const response = await fetch('https://www.google.com', {
       method: 'HEAD',
       mode: 'no-cors',
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
     return true;
   } catch {
     return false;
   }
 };
 
-const getDeviceInfo = () => {
-  const info: any = {};
+// Get location information with proper platform handling and permission requests
+const getLocationInfo = async () => {
+  const defaultLocation = {
+    latitude: null as number | null,
+    longitude: null as number | null,
+    accuracy: null as number | null,
+    address: null as string | null,
+    permission: 'unknown',
+  };
 
-  if (Platform.OS === 'web') {
-    // Web-specific info
-    info.userAgent = navigator.userAgent;
-    info.platform = navigator.platform;
-    info.language = navigator.language;
-    info.cookieEnabled = navigator.cookieEnabled;
-    info.onLine = navigator.onLine;
+  // Check if geolocation is available
+  if (!('geolocation' in navigator)) {
+    return { ...defaultLocation, permission: 'not supported' };
   }
 
-  return info;
+  try {
+    // Handle native platforms (iOS/Android) - request permission first
+    if (Platform.OS === 'android') {
+      // For Android, check location permission
+      const hasLocationPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+
+      if (!hasLocationPermission) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission Required',
+            message:
+              'This app needs location access to get your current location',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Deny',
+          },
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          return {
+            ...defaultLocation,
+            permission: 'denied',
+            address: 'Location permission denied',
+          };
+        }
+      }
+    }
+
+    // For web platforms, check permission state if available
+    if ('permissions' in navigator && Platform.OS === 'web') {
+      const permissionStatus = await navigator.permissions.query({
+        name: 'geolocation' as PermissionName,
+      });
+
+      if (permissionStatus.state === 'denied') {
+        return {
+          ...defaultLocation,
+          permission: 'denied',
+          address: 'Location permission denied in browser',
+        };
+      }
+
+      defaultLocation.permission = permissionStatus.state;
+    }
+
+    // Get current position with proper error handling
+    const position = await new Promise<GeolocationPosition>(
+      (resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000, // Increased timeout for better reliability
+          maximumAge: 30000, // Allow slightly cached location
+        });
+      },
+    );
+
+    return {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      address: `${position.coords.latitude.toFixed(
+        6,
+      )}, ${position.coords.longitude.toFixed(6)}`,
+      permission: 'granted',
+    };
+  } catch (error: any) {
+    console.log('Location error:', error);
+
+    // Handle different error types with more detailed responses
+    if (error.code === 1) {
+      return {
+        ...defaultLocation,
+        permission: 'denied',
+        address: 'Location permission denied by user',
+      };
+    } else if (error.code === 2) {
+      return {
+        ...defaultLocation,
+        permission: 'granted',
+        address: 'Location unavailable - check GPS/network',
+      };
+    } else if (error.code === 3) {
+      return {
+        ...defaultLocation,
+        permission: 'granted',
+        address: 'Location request timed out - try again',
+      };
+    }
+
+    // Handle Android permission errors specifically
+    if (Platform.OS === 'android' && error.message?.includes('permission')) {
+      return {
+        ...defaultLocation,
+        permission: 'denied',
+        address: 'Android location permission required',
+      };
+    }
+
+    return {
+      ...defaultLocation,
+      permission: 'error',
+      address: `Error: ${error.message || 'Unknown location error'}`,
+    };
+  }
 };
 
 interface DeviceInfo {
   internet: {
     isConnected: boolean;
     type: string;
-    isWifiEnabled: boolean;
-    isInternetReachable: boolean;
   };
   wifi: {
     ssid: string | null;
@@ -65,9 +245,12 @@ interface DeviceInfo {
     address: string | null;
     permission: string;
   };
-  network: {
-    ipAddress: string | null;
-    networkState: string;
+  platform: {
+    os: string;
+    version: string;
+    userAgent?: string;
+    language?: string;
+    cookieEnabled?: boolean;
   };
 }
 
@@ -76,8 +259,6 @@ export default function DeviceInfoScreen() {
     internet: {
       isConnected: false,
       type: 'unknown',
-      isWifiEnabled: false,
-      isInternetReachable: false,
     },
     wifi: {
       ssid: null,
@@ -91,9 +272,13 @@ export default function DeviceInfoScreen() {
       address: null,
       permission: 'unknown',
     },
-    network: {
-      ipAddress: null,
-      networkState: 'unknown',
+    platform: {
+      os: Platform.OS,
+      version: Platform.Version?.toString() || 'Unknown',
+      userAgent: Platform.OS === 'web' ? navigator.userAgent : undefined,
+      language: Platform.OS === 'web' ? navigator.language : undefined,
+      cookieEnabled:
+        Platform.OS === 'web' ? navigator.cookieEnabled : undefined,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -101,107 +286,28 @@ export default function DeviceInfoScreen() {
 
   const fetchDeviceInfo = async () => {
     try {
-      // Basic network connectivity check
+      // Check internet connectivity
       const isConnected = await checkInternetConnection();
-      const deviceInfo = getDeviceInfo();
 
-      const networkInfo = {
-        isConnected,
-        type: Platform.OS,
-        isWifiEnabled: Platform.OS === 'web' ? deviceInfo.onLine : false,
-        isInternetReachable: isConnected,
-      };
+      // Get network/WiFi information
+      const networkData = await getNetworkInfo();
 
-      // Basic device IP (not available in most mobile environments due to security)
-      let ipAddress = null;
-      if (Platform.OS === 'web') {
-        // In web, we can't get the actual IP due to security restrictions
-        ipAddress = 'Not available in browser';
-      } else {
-        ipAddress = 'Not available (requires native module)';
-      }
+      // Get location information
+      const locationData = await getLocationInfo();
 
-      // WiFi Information (very limited without native modules)
-      const wifiInfo = {
-        ssid:
-          Platform.OS === 'web'
-            ? deviceInfo.onLine
-              ? 'Connected (details not available)'
-              : 'Not connected'
-            : 'Requires native WiFi module',
-        bssid: null,
-        ipAddress,
-      };
-
-      // Location Information (using universal browser geolocation API)
-      let locationInfo = {
-        latitude: null as number | null,
-        longitude: null as number | null,
-        accuracy: null as number | null,
-        address: null as string | null,
-        permission: 'unknown',
-      };
-
-      // Check if geolocation is available (works on web, iOS, Android)
-      if ('geolocation' in navigator) {
-        try {
-          // Check current permission state
-          if ('permissions' in navigator) {
-            const permissionStatus = await navigator.permissions.query({
-              name: 'geolocation',
-            });
-            locationInfo.permission = permissionStatus.state;
-          }
-
-          // Try to get current position
-          const position = await new Promise<GeolocationPosition>(
-            (resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 60000,
-              });
-            },
-          );
-
-          locationInfo = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            address: 'Reverse geocoding not available',
-            permission: 'granted',
-          };
-        } catch (error: any) {
-          console.log('Location error:', error);
-          // Determine permission status from error
-          if (error.code === 1) {
-            // PERMISSION_DENIED
-            locationInfo.permission = 'denied';
-          } else if (error.code === 2) {
-            // POSITION_UNAVAILABLE
-            locationInfo.permission = 'granted';
-            locationInfo.address = 'Position unavailable';
-          } else if (error.code === 3) {
-            // TIMEOUT
-            locationInfo.permission = 'granted';
-            locationInfo.address = 'Request timed out';
-          } else {
-            locationInfo.permission = 'denied';
-          }
-        }
-      } else {
-        locationInfo.permission = 'not supported';
-      }
-
-      setDeviceInfo({
-        internet: networkInfo,
-        wifi: wifiInfo,
-        location: locationInfo,
-        network: {
-          ipAddress,
-          networkState: isConnected ? 'connected' : 'disconnected',
+      setDeviceInfo((prev) => ({
+        ...prev,
+        internet: {
+          isConnected,
+          type: Platform.OS,
         },
-      });
+        wifi: {
+          ssid: networkData.ssid,
+          bssid: networkData.bssid,
+          ipAddress: networkData.ipAddress,
+        },
+        location: locationData,
+      }));
     } catch (error) {
       console.error('Error fetching device info:', error);
     } finally {
@@ -230,8 +336,9 @@ export default function DeviceInfoScreen() {
         return;
       }
 
-      // Request location permission by trying to get current position
-      // This automatically triggers the permission request dialog
+      setRefreshing(true);
+
+      // Request location by trying to get current position
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -242,34 +349,36 @@ export default function DeviceInfoScreen() {
         },
       );
 
-      // If we get here, permission was granted
+      // Update location info immediately
+      setDeviceInfo((prev) => ({
+        ...prev,
+        location: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          address: `${position.coords.latitude.toFixed(
+            6,
+          )}, ${position.coords.longitude.toFixed(6)}`,
+          permission: 'granted',
+        },
+      }));
+
       Alert.alert(
-        'Permission Granted',
-        'Location permission has been granted. Refreshing device information...',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setRefreshing(true);
-              fetchDeviceInfo();
-            },
-          },
-        ],
+        'Location Access Granted',
+        'Location information has been updated successfully.',
+        [{ text: 'OK' }],
       );
     } catch (error: any) {
       console.error('Error requesting location permission:', error);
 
       let message = 'Failed to get location permission.';
       if (error.code === 1) {
-        // PERMISSION_DENIED
         message =
-          'Location permission was denied. You can enable it manually in your browser or device settings.';
+          'Location permission was denied. You can enable it in your device/browser settings.';
       } else if (error.code === 2) {
-        // POSITION_UNAVAILABLE
         message =
           'Location is unavailable. Please check your GPS and network connection.';
       } else if (error.code === 3) {
-        // TIMEOUT
         message = 'Location request timed out. Please try again.';
       }
 
@@ -277,6 +386,8 @@ export default function DeviceInfoScreen() {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Open Settings', onPress: () => Linking.openSettings() },
       ]);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -387,17 +498,8 @@ export default function DeviceInfoScreen() {
               badge={getStatusBadge(deviceInfo.internet.isConnected)}
             />
             <InfoRow
-              label="Connection Type"
+              label="Platform"
               value={deviceInfo.internet.type.toUpperCase()}
-            />
-            <InfoRow
-              label="Internet Reachable"
-              value={deviceInfo.internet.isInternetReachable ? 'Yes' : 'No'}
-              badge={getStatusBadge(
-                deviceInfo.internet.isInternetReachable,
-                'Reachable',
-                'Not Reachable',
-              )}
             />
           </VStack>
         </InfoCard>
@@ -405,15 +507,6 @@ export default function DeviceInfoScreen() {
         {/* WiFi Information */}
         <InfoCard title="WiFi Information" icon={WifiIcon}>
           <VStack space="sm">
-            <InfoRow
-              label="WiFi Enabled"
-              value={deviceInfo.internet.isWifiEnabled ? 'Yes' : 'No'}
-              badge={getStatusBadge(
-                deviceInfo.internet.isWifiEnabled,
-                'Enabled',
-                'Disabled',
-              )}
-            />
             <InfoRow
               label="SSID"
               value={deviceInfo.wifi.ssid || 'Not available'}
@@ -425,23 +518,6 @@ export default function DeviceInfoScreen() {
             {deviceInfo.wifi.bssid && (
               <InfoRow label="BSSID" value={deviceInfo.wifi.bssid} />
             )}
-          </VStack>
-        </InfoCard>
-
-        {/* Network Information */}
-        <InfoCard title="Network Details" icon={SignalIcon}>
-          <VStack space="sm">
-            <InfoRow
-              label="Network State"
-              value={deviceInfo.network.networkState}
-              badge={getStatusBadge(
-                deviceInfo.network.networkState === 'connected',
-              )}
-            />
-            <InfoRow
-              label="Device IP"
-              value={deviceInfo.network.ipAddress || 'Not available'}
-            />
           </VStack>
         </InfoCard>
 
@@ -547,24 +623,21 @@ export default function DeviceInfoScreen() {
         {/* Platform Information */}
         <InfoCard title="Platform Information" icon={DevicePhoneMobileIcon}>
           <VStack space="sm">
-            <InfoRow label="Platform" value={Platform.OS} />
-            <InfoRow
-              label="Version"
-              value={Platform.Version?.toString() || 'Unknown'}
-            />
+            <InfoRow label="Platform" value={deviceInfo.platform.os} />
+            <InfoRow label="Version" value={deviceInfo.platform.version} />
             {Platform.OS === 'web' && (
               <>
                 <InfoRow
                   label="User Agent"
-                  value={getDeviceInfo().userAgent || 'Not available'}
+                  value={deviceInfo.platform.userAgent || 'Not available'}
                 />
                 <InfoRow
                   label="Language"
-                  value={getDeviceInfo().language || 'Not available'}
+                  value={deviceInfo.platform.language || 'Not available'}
                 />
                 <InfoRow
                   label="Cookies Enabled"
-                  value={getDeviceInfo().cookieEnabled ? 'Yes' : 'No'}
+                  value={deviceInfo.platform.cookieEnabled ? 'Yes' : 'No'}
                 />
               </>
             )}
@@ -573,13 +646,13 @@ export default function DeviceInfoScreen() {
 
         <Box className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <Text className="text-blue-800 dark:text-blue-200 text-sm text-center mb-2">
-            Universal device information using standard web APIs - no native
-            modules required!
+            📱 Cross-Platform Device Information
           </Text>
           <Text className="text-blue-800 dark:text-blue-200 text-xs text-center">
-            • Location: Browser geolocation API (works on all platforms){'\n'}•
-            Network: Standard fetch API for connectivity testing{'\n'}•
-            Platform: React Native Platform API for device detection
+            • Location: Uses native geolocation API (works on web, iOS, Android)
+            {'\n'}• Network: WiFi details with proper permission handling{'\n'}•
+            Platform: Detects web, iOS, or Android with version info{'\n'}•
+            Internet: Real connectivity testing via network requests
           </Text>
         </Box>
       </VStack>

@@ -1,3 +1,3 @@
-import DeviceInfoScreen from '@/core/screens/demo/device-info';
+import DeviceDetailsScreen from '@/core/screens/demo/device-details';
 
-export default DeviceInfoScreen;
+export default DeviceDetailsScreen;

@@ -6,7 +6,6 @@ import { Divider } from '@/components/ui/divider';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Pressable } from '@/components/ui/pressable';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -16,13 +15,11 @@ import * as Device from 'expo-device';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import {
-  ArrowPathIcon,
   DevicePhoneMobileIcon,
   GlobeAltIcon,
   WifiIcon,
 } from 'react-native-heroicons/outline';
 import { NetworkInfo } from 'react-native-network-info';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Types
 interface NetworkConnectivity {
@@ -62,7 +59,6 @@ interface PlatformInfo {
 
 const DeviceDetailsScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [networkInfo, setNetworkInfo] = useState<NetworkConnectivity | null>(
     null,
   );
@@ -298,13 +294,6 @@ const DeviceDetailsScreen: React.FC = () => {
     }
   }, [getWiFiInfo]);
 
-  // Refresh data
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadAllData();
-    setRefreshing(false);
-  }, [loadAllData]);
-
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
@@ -338,7 +327,7 @@ const DeviceDetailsScreen: React.FC = () => {
     children: React.ReactNode,
     loading: boolean = false,
   ) => (
-    <Card className="p-5 mb-4 bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700">
+    <Card className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
       <VStack space="md">
         <HStack className="items-center justify-between">
           <HStack className="items-center" space="sm">
@@ -456,201 +445,176 @@ const DeviceDetailsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1">
-      <ScrollView className="flex-1 px-4 py-2">
-        <VStack space="lg">
-          {/* Header with refresh button */}
-          <HStack className="items-center justify-between mb-6 pt-2">
-            <Heading
-              size="xl"
-              className="text-gray-900 dark:text-white font-bold"
-            >
-              Device Details
-            </Heading>
-            <Pressable
-              onPress={handleRefresh}
-              disabled={refreshing}
-              className="p-3 rounded-full bg-blue-100 dark:bg-blue-900 shadow-sm border border-blue-200 dark:border-blue-800"
-            >
-              <Icon
-                as={ArrowPathIcon}
-                size="md"
-                className={`text-blue-600 dark:text-blue-400 ${
-                  refreshing ? 'animate-spin' : ''
-                }`}
-              />
-            </Pressable>
-          </HStack>
-
-          {/* Internet Connectivity Card */}
-          {renderInfoCard(
-            'Internet Connectivity',
-            GlobeAltIcon,
-            <VStack space="sm">
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Status:
-                </Text>
-                {getStatusBadge(
-                  networkInfo?.isConnected ? 'Connected' : 'Disconnected',
-                  'connection',
-                )}
-              </HStack>
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Internet Reachable:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {networkInfo?.isInternetReachable === null
-                    ? 'Unknown'
-                    : networkInfo?.isInternetReachable
-                    ? 'Yes'
-                    : 'No'}
-                </Text>
-              </HStack>
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Connection Type:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {networkInfo?.connectionType || 'Unknown'}
-                </Text>
-              </HStack>
-            </VStack>,
-            loading,
-          )}
-
-          {/* WiFi Information Card */}
-          {renderInfoCard(
-            'WiFi Information',
-            WifiIcon,
-            <VStack space="sm">
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Permission:
-                </Text>
-                {getStatusBadge(
-                  wifiInfo?.permissionStatus || 'unknown',
-                  'permission',
-                )}
-              </HStack>
-              {wifiInfo?.permissionStatus === 'granted' ? (
-                <>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      SSID:
-                    </Text>
-                    <Text className="text-gray-900 dark:text-white text-xs">
-                      {wifiInfo.ssid || 'Not available'}
-                    </Text>
-                  </HStack>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      BSSID:
-                    </Text>
-                    <VStack className="items-end">
-                      <Text className="text-gray-900 dark:text-white text-xs">
-                        {wifiInfo.bssid || 'Not available'}
-                      </Text>
-                      {wifiInfo.bssid &&
-                        !wifiInfo.bssid.match(
-                          /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
-                        ) && (
-                          <Text className="text-gray-500 dark:text-gray-400 text-xs italic mt-1">
-                            {Platform.OS === 'ios'
-                              ? 'iOS privacy protected'
-                              : 'May be scrambled for privacy'}
-                          </Text>
-                        )}
-                    </VStack>
-                  </HStack>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      IP Address:
-                    </Text>
-                    <Text className="text-gray-900 dark:text-white text-xs">
-                      {wifiInfo.ipAddress || 'Not available'}
-                    </Text>
-                  </HStack>
-                </>
-              ) : (
-                <VStack space="xs">
-                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
-                    {wifiInfo?.error ||
-                      'Location permission is required to access WiFi information on Android devices.'}
-                  </Text>
-                  {wifiInfo?.permissionStatus === 'blocked' && (
-                    <Text className="text-red-500 dark:text-red-400 text-xs italic">
-                      Permission blocked. Please enable location permission in
-                      device settings.
-                    </Text>
-                  )}
-                </VStack>
+    <ScrollView className="flex-1 px-4 py-2 pt-8">
+      <VStack space="lg">
+        {/* Internet Connectivity Card */}
+        {renderInfoCard(
+          'Internet Connectivity',
+          GlobeAltIcon,
+          <VStack space="sm">
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Status:
+              </Text>
+              {getStatusBadge(
+                networkInfo?.isConnected ? 'Connected' : 'Disconnected',
+                'connection',
               )}
-              {renderPermissionButton(
-                handleRequestLocationPermission,
+            </HStack>
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Internet Reachable:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {networkInfo?.isInternetReachable === null
+                  ? 'Unknown'
+                  : networkInfo?.isInternetReachable
+                  ? 'Yes'
+                  : 'No'}
+              </Text>
+            </HStack>
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Connection Type:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {networkInfo?.connectionType || 'Unknown'}
+              </Text>
+            </HStack>
+          </VStack>,
+          loading,
+        )}
+
+        {/* WiFi Information Card */}
+        {renderInfoCard(
+          'WiFi Information',
+          WifiIcon,
+          <VStack space="sm">
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Permission:
+              </Text>
+              {getStatusBadge(
                 wifiInfo?.permissionStatus || 'unknown',
-                'Location',
-                loading,
+                'permission',
               )}
-            </VStack>,
-            loading,
-          )}
+            </HStack>
+            {wifiInfo?.permissionStatus === 'granted' ? (
+              <>
+                <HStack className="items-center justify-between">
+                  <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                    SSID:
+                  </Text>
+                  <Text className="text-gray-900 dark:text-white text-xs">
+                    {wifiInfo.ssid || 'Not available'}
+                  </Text>
+                </HStack>
+                <HStack className="items-center justify-between">
+                  <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                    BSSID:
+                  </Text>
+                  <VStack className="items-end">
+                    <Text className="text-gray-900 dark:text-white text-xs">
+                      {wifiInfo.bssid || 'Not available'}
+                    </Text>
+                    {wifiInfo.bssid &&
+                      !wifiInfo.bssid.match(
+                        /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
+                      ) && (
+                        <Text className="text-gray-500 dark:text-gray-400 text-xs italic mt-1">
+                          {Platform.OS === 'ios'
+                            ? 'iOS privacy protected'
+                            : 'May be scrambled for privacy'}
+                        </Text>
+                      )}
+                  </VStack>
+                </HStack>
+                <HStack className="items-center justify-between">
+                  <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                    IP Address:
+                  </Text>
+                  <Text className="text-gray-900 dark:text-white text-xs">
+                    {wifiInfo.ipAddress || 'Not available'}
+                  </Text>
+                </HStack>
+              </>
+            ) : (
+              <VStack space="xs">
+                <Text className="text-gray-500 dark:text-gray-400 text-xs">
+                  {wifiInfo?.error ||
+                    'Location permission is required to access WiFi information on Android devices.'}
+                </Text>
+                {wifiInfo?.permissionStatus === 'blocked' && (
+                  <Text className="text-red-500 dark:text-red-400 text-xs italic">
+                    Permission blocked. Please enable location permission in
+                    device settings.
+                  </Text>
+                )}
+              </VStack>
+            )}
+            {renderPermissionButton(
+              handleRequestLocationPermission,
+              wifiInfo?.permissionStatus || 'unknown',
+              'Location',
+              loading,
+            )}
+          </VStack>,
+          loading,
+        )}
 
-          {/* Platform Information Card */}
-          {renderInfoCard(
-            'Platform Information',
-            DevicePhoneMobileIcon,
-            <VStack space="sm">
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Operating System:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {platformInfo?.os || 'Unknown'}
-                </Text>
-              </HStack>
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  OS Version:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {platformInfo?.osVersion || 'Unknown'}
-                </Text>
-              </HStack>
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Name:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {platformInfo?.deviceName || 'Unknown'}
-                </Text>
-              </HStack>
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Model:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {`${platformInfo?.manufacturer} - ${platformInfo?.deviceModel}` ||
-                    'Unknown'}
-                </Text>
-              </HStack>
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Is Tablet:
-                </Text>
-                <Text className="text-gray-900 dark:text-white text-xs">
-                  {platformInfo?.isTablet ? 'Yes' : 'No'}
-                </Text>
-              </HStack>
-            </VStack>,
-            loading,
-          )}
-        </VStack>
-        {/* Bottom padding for better scroll experience */}
-        <Box className="h-6" />
-      </ScrollView>
-    </SafeAreaView>
+        {/* Platform Information Card */}
+        {renderInfoCard(
+          'Platform Information',
+          DevicePhoneMobileIcon,
+          <VStack space="sm">
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Operating System:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {platformInfo?.os || 'Unknown'}
+              </Text>
+            </HStack>
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                OS Version:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {platformInfo?.osVersion || 'Unknown'}
+              </Text>
+            </HStack>
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Name:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {platformInfo?.deviceName || 'Unknown'}
+              </Text>
+            </HStack>
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Model:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {`${platformInfo?.manufacturer} - ${platformInfo?.deviceModel}` ||
+                  'Unknown'}
+              </Text>
+            </HStack>
+            <HStack className="items-center justify-between">
+              <Text className="text-gray-700 dark:text-gray-300 text-xs">
+                Is Tablet:
+              </Text>
+              <Text className="text-gray-900 dark:text-white text-xs">
+                {platformInfo?.isTablet ? 'Yes' : 'No'}
+              </Text>
+            </HStack>
+          </VStack>,
+          loading,
+        )}
+      </VStack>
+      {/* Bottom padding for better scroll experience */}
+      <Box className="h-6" />
+    </ScrollView>
   );
 };
 

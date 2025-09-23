@@ -9,7 +9,7 @@ export default function DemoLayout() {
       title: 'Demo Pages',
     },
     {
-      name: 'device-info',
+      name: 'device',
       title: 'Device Info',
     },
     {

@@ -33,11 +33,7 @@ export default function LocationScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <VStack className="flex-1 p-4" space="lg">
-        <Heading size="xl" className="text-gray-900 dark:text-white font-bold">
-          Location Demo
-        </Heading>
-
-        <Card className="p-5 bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700">
+        <Card className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
           <VStack space="md">
             <Heading size="md" className="text-gray-900 dark:text-white">
               Current Location

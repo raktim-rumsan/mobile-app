@@ -55,6 +55,7 @@ export default function LayoutTpl({ pages }: { pages: PageConfig[] }) {
   const AppLayout = () => {
     return (
       <Stack
+        initialRouteName="index"
         screenOptions={{
           header: ({ route }) => {
             const pageConfig = getPageConfig(route.name);

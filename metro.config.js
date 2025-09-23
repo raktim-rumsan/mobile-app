@@ -10,4 +10,7 @@ config.resolver.alias = {
   crypto: 'expo-crypto',
 };
 
+// Exclude react-native-maps from web builds
+config.resolver.blockList = [/react-native-maps/];
+
 module.exports = withNativeWind(config, { input: './global.css' });

@@ -18,6 +18,9 @@
       "simulator": true,
       "bundleIdentifier": "com.rumsan.wallet",
       "buildNumber": "1.0.0",
+      "config": {
+        "googleMapsApiKey": "AIzaSyCWhJCIPwFvQkfz1Ah9P_U77oy6L44YVp8"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -27,6 +30,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCWhJCIPwFvQkfz1Ah9P_U77oy6L44YVp8"
+        }
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
@@ -57,7 +65,8 @@
             "NSFaceIDUsageDescription"
           ]
         }
-      ]
+      ],
+      "expo-maps"
     ],
     "experiments": {
       "typedRoutes": true

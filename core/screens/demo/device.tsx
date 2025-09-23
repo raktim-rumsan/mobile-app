@@ -11,39 +11,20 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useLocation } from '@/core/hooks/useLocation';
 import * as Device from 'expo-device';
-import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, PermissionsAndroid, Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import {
   ArrowPathIcon,
   DevicePhoneMobileIcon,
   GlobeAltIcon,
-  MapPinIcon,
   WifiIcon,
 } from 'react-native-heroicons/outline';
 import { NetworkInfo } from 'react-native-network-info';
-import { check, PERMISSIONS, request } from 'react-native-permissions';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Types
-interface LocationInfo {
-  latitude: number | null;
-  longitude: number | null;
-  altitude: number | null;
-  accuracy: number | null;
-  speed: number | null;
-  heading: number | null;
-  timestamp: number | null;
-  permissionStatus:
-    | 'granted'
-    | 'denied'
-    | 'not-determined'
-    | 'blocked'
-    | 'unavailable';
-  error?: string;
-}
-
 interface NetworkConnectivity {
   isConnected: boolean;
   connectionType: string;
@@ -78,115 +59,41 @@ interface PlatformInfo {
 }
 
 // Utility functions
-const getLocationPermission = async (): Promise<string> => {
-  if (Platform.OS === 'web') {
-    try {
-      if ('permissions' in navigator) {
-        const permissionStatus = await navigator.permissions.query({
-          name: 'geolocation' as PermissionName,
-        });
-        return permissionStatus.state;
-      }
-      return 'prompt';
-    } catch {
-      return 'unavailable';
-    }
-  } else if (Platform.OS === 'android') {
-    try {
-      // Use built-in PermissionsAndroid for Android
-      const hasPermission = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      );
-      return hasPermission ? 'granted' : 'denied';
-    } catch (error) {
-      console.error('Android permission check error:', error);
-      return 'unavailable';
-    }
-  } else {
-    // For iOS, try expo-location first, fallback to react-native-permissions
-    try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      return status;
-    } catch (expoError) {
-      console.log(
-        'Expo Location not available, falling back to react-native-permissions',
-      );
-      try {
-        const result = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        return result;
-      } catch (permError) {
-        console.error('Permission check error:', permError);
-        return 'unavailable';
-      }
-    }
-  }
-};
-
-const requestLocationPermission = async (): Promise<string> => {
-  if (Platform.OS === 'web') {
-    // For web, we'll use the geolocation API directly
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        () => resolve('granted'),
-        (error) => {
-          if (error.code === error.PERMISSION_DENIED) {
-            resolve('denied');
-          } else {
-            resolve('blocked');
-          }
-        },
-        { timeout: 5000 },
-      );
-    });
-  } else if (Platform.OS === 'android') {
-    try {
-      // Use built-in PermissionsAndroid for Android
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Permission Required',
-          message:
-            'This app needs location access to get location and WiFi information',
-          buttonPositive: 'Allow',
-          buttonNegative: 'Deny',
-        },
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED
-        ? 'granted'
-        : 'denied';
-    } catch (error) {
-      console.error('Android permission request error:', error);
-      return 'unavailable';
-    }
-  } else {
-    // For iOS, try expo-location first, fallback to react-native-permissions
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      return status;
-    } catch (expoError) {
-      console.log(
-        'Expo Location not available, falling back to react-native-permissions',
-      );
-      try {
-        const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        return result;
-      } catch (permError) {
-        console.error('Permission request error:', permError);
-        return 'unavailable';
-      }
-    }
-  }
-};
 
 const DeviceDetailsScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
   const [networkInfo, setNetworkInfo] = useState<NetworkConnectivity | null>(
     null,
   );
   const [wifiInfo, setWifiInfo] = useState<WiFiInfo | null>(null);
   const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
+
+  const { locationInfo, requestPermissionAndReload } = useLocation();
+
+  // Enhanced location permission request with WiFi reload
+  const handleRequestLocationPermission = async () => {
+    try {
+      console.log('Requesting location permission...');
+      setLoading(true);
+      const result = await requestPermissionAndReload();
+
+      console.log('Permission request result:', result);
+
+      if (result.success) {
+        // Permission granted, also reload WiFi info immediately
+        console.log('Location permission granted, reloading WiFi info...');
+        await reloadWiFiInfo();
+      } else {
+        console.log('Location permission denied or failed');
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      Alert.alert('Error', 'Failed to request location permission');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Check internet connectivity
   const checkInternetConnection = async (): Promise<NetworkConnectivity> => {
@@ -217,7 +124,7 @@ const DeviceDetailsScreen: React.FC = () => {
   };
 
   // Get WiFi information
-  const getWiFiInfo = async (): Promise<WiFiInfo> => {
+  const getWiFiInfo = useCallback(async (): Promise<WiFiInfo> => {
     try {
       if (Platform.OS === 'web') {
         return {
@@ -231,9 +138,24 @@ const DeviceDetailsScreen: React.FC = () => {
       }
 
       // Check location permission for WiFi info (required on Android)
-      const permissionStatus = await getLocationPermission();
+      console.log(
+        'Current location permission status:',
+        locationInfo?.permissionStatus,
+      );
 
-      if (permissionStatus !== 'granted') {
+      if (locationInfo?.permissionStatus !== 'granted') {
+        const permissionStatus =
+          locationInfo?.permissionStatus || 'not-determined';
+        let errorMessage = 'Location permission required for WiFi info';
+
+        if (Platform.OS === 'android') {
+          errorMessage =
+            'Location permission is required to access WiFi information on Android devices';
+        } else if (Platform.OS === 'ios') {
+          errorMessage =
+            'Location permission may be required for WiFi information';
+        }
+
         return {
           ssid: null,
           bssid: null,
@@ -241,10 +163,11 @@ const DeviceDetailsScreen: React.FC = () => {
           frequency: null,
           signalStrength: null,
           permissionStatus: permissionStatus as any,
-          error: 'Location permission required for WiFi info on Android',
+          error: errorMessage,
         };
       }
 
+      console.log('Location permission granted, fetching WiFi info...');
       const ssid = await NetworkInfo.getSSID();
       const bssid = await NetworkInfo.getBSSID();
       const ipAddress = await NetworkInfo.getIPV4Address();
@@ -296,110 +219,7 @@ const DeviceDetailsScreen: React.FC = () => {
         error: error?.message || 'Error getting WiFi info',
       };
     }
-  };
-
-  // Get location information
-  const getLocationInfo = async (): Promise<LocationInfo> => {
-    try {
-      const permissionStatus = await getLocationPermission();
-
-      if (permissionStatus !== 'granted') {
-        return {
-          latitude: null,
-          longitude: null,
-          altitude: null,
-          accuracy: null,
-          speed: null,
-          heading: null,
-          timestamp: null,
-          permissionStatus: permissionStatus as any,
-          error: 'Location permission not granted',
-        };
-      }
-
-      if (Platform.OS === 'web') {
-        // Use web geolocation API
-        const position = await new Promise<GeolocationPosition>(
-          (resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 15000,
-              maximumAge: 30000,
-            });
-          },
-        );
-
-        return {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          altitude: position.coords.altitude,
-          accuracy: position.coords.accuracy,
-          speed: position.coords.speed,
-          heading: position.coords.heading,
-          timestamp: position.timestamp,
-          permissionStatus: 'granted',
-        };
-      } else {
-        // Try expo-location first, fallback to web API for native platforms
-        try {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
-            timeInterval: 5000,
-            distanceInterval: 1,
-          });
-
-          return {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            altitude: location.coords.altitude,
-            accuracy: location.coords.accuracy,
-            speed: location.coords.speed,
-            heading: location.coords.heading,
-            timestamp: location.timestamp,
-            permissionStatus: 'granted',
-          };
-        } catch (expoError) {
-          console.log(
-            'Expo Location not available, falling back to web geolocation API',
-          );
-          // Fallback to web geolocation API even on native platforms
-          const position = await new Promise<GeolocationPosition>(
-            (resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 30000,
-              });
-            },
-          );
-
-          return {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            altitude: position.coords.altitude,
-            accuracy: position.coords.accuracy,
-            speed: position.coords.speed,
-            heading: position.coords.heading,
-            timestamp: position.timestamp,
-            permissionStatus: 'granted',
-          };
-        }
-      }
-    } catch (error: any) {
-      console.error('Location error:', error);
-      return {
-        latitude: null,
-        longitude: null,
-        altitude: null,
-        accuracy: null,
-        speed: null,
-        heading: null,
-        timestamp: null,
-        permissionStatus: 'denied',
-        error: error?.message || 'Error getting location',
-      };
-    }
-  };
+  }, [locationInfo?.permissionStatus]);
 
   // Get platform information
   const getPlatformInfo = (): PlatformInfo => {
@@ -450,22 +270,33 @@ const DeviceDetailsScreen: React.FC = () => {
   const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [networkData, wifiData, locationData] = await Promise.all([
-        checkInternetConnection(),
-        getWiFiInfo(),
-        getLocationInfo(),
-      ]);
+      // Always load network and platform info
+      const [networkData] = await Promise.all([checkInternetConnection()]);
 
       setNetworkInfo(networkData);
-      setWifiInfo(wifiData);
-      setLocationInfo(locationData);
       setPlatformInfo(getPlatformInfo());
+
+      // Load WiFi info - this will handle permission checking internally
+      const wifiData = await getWiFiInfo();
+      setWifiInfo(wifiData);
     } catch (error) {
       console.error('Error loading device data:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getWiFiInfo]);
+
+  // Helper function to reload just WiFi data
+  const reloadWiFiInfo = useCallback(async () => {
+    try {
+      console.log('Reloading WiFi info...');
+      const wifiData = await getWiFiInfo();
+      setWifiInfo(wifiData);
+      console.log('WiFi info reloaded:', wifiData);
+    } catch (error) {
+      console.error('Error reloading WiFi info:', error);
+    }
+  }, [getWiFiInfo]);
 
   // Refresh data
   const handleRefresh = useCallback(async () => {
@@ -474,34 +305,32 @@ const DeviceDetailsScreen: React.FC = () => {
     setRefreshing(false);
   }, [loadAllData]);
 
-  // Request location permission and reload
-  const handleLocationPermissionRequest = async () => {
-    try {
-      const result = await requestLocationPermission();
-      if (result === 'granted') {
-        const newLocationInfo = await getLocationInfo();
-        setLocationInfo(newLocationInfo);
-        // Also refresh WiFi info since it needs location permission
-        const newWifiInfo = await getWiFiInfo();
-        setWifiInfo(newWifiInfo);
-      } else {
-        Alert.alert(
-          'Permission Denied',
-          'Location permission is required to get location and WiFi information.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Settings', onPress: () => Linking.openSettings() },
-          ],
-        );
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to request location permission');
-    }
-  };
-
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
+
+  // Monitor location permission changes and reload WiFi info
+  useEffect(() => {
+    console.log('Permission status check:', {
+      locationPermission: locationInfo?.permissionStatus,
+      wifiPermission: wifiInfo?.permissionStatus,
+    });
+
+    if (
+      locationInfo?.permissionStatus === 'granted' &&
+      wifiInfo?.permissionStatus !== 'granted'
+    ) {
+      // Permission was just granted, reload WiFi info
+      console.log(
+        'Location permission granted via useEffect, reloading WiFi info...',
+      );
+      reloadWiFiInfo();
+    }
+  }, [
+    locationInfo?.permissionStatus,
+    wifiInfo?.permissionStatus,
+    reloadWiFiInfo,
+  ]);
 
   const renderInfoCard = (
     title: string,
@@ -539,6 +368,7 @@ const DeviceDetailsScreen: React.FC = () => {
     onPress: () => void,
     permissionStatus: string,
     permissionType: string,
+    isLoading: boolean = false,
   ) => {
     if (permissionStatus === 'granted') return null;
 
@@ -548,10 +378,16 @@ const DeviceDetailsScreen: React.FC = () => {
         variant="outline"
         size="sm"
         className="mt-3 border-blue-200 dark:border-blue-800"
+        disabled={isLoading}
       >
-        <ButtonText className="text-blue-600 dark:text-blue-400 text-xs">
-          Request {permissionType} Permission
-        </ButtonText>
+        <HStack space="xs" className="items-center">
+          {isLoading && <Spinner size="small" className="text-blue-600" />}
+          <ButtonText className="text-blue-600 dark:text-blue-400 text-xs">
+            {isLoading
+              ? 'Requesting...'
+              : `Request ${permissionType} Permission`}
+          </ButtonText>
+        </HStack>
       </Button>
     );
   };
@@ -620,7 +456,7 @@ const DeviceDetailsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <SafeAreaView className="flex-1">
       <ScrollView className="flex-1 px-4 py-2">
         <VStack space="lg">
           {/* Header with refresh button */}
@@ -738,83 +574,24 @@ const DeviceDetailsScreen: React.FC = () => {
                   </HStack>
                 </>
               ) : (
-                <Text className="text-gray-500 dark:text-gray-400 text-xs">
-                  {wifiInfo?.error ||
-                    'Permission required to access WiFi information'}
-                </Text>
+                <VStack space="xs">
+                  <Text className="text-gray-500 dark:text-gray-400 text-xs">
+                    {wifiInfo?.error ||
+                      'Location permission is required to access WiFi information on Android devices.'}
+                  </Text>
+                  {wifiInfo?.permissionStatus === 'blocked' && (
+                    <Text className="text-red-500 dark:text-red-400 text-xs italic">
+                      Permission blocked. Please enable location permission in
+                      device settings.
+                    </Text>
+                  )}
+                </VStack>
               )}
               {renderPermissionButton(
-                handleLocationPermissionRequest,
+                handleRequestLocationPermission,
                 wifiInfo?.permissionStatus || 'unknown',
                 'Location',
-              )}
-            </VStack>,
-            loading,
-          )}
-
-          {/* Location Information Card */}
-          {renderInfoCard(
-            'Location Information',
-            MapPinIcon,
-            <VStack space="sm">
-              <HStack className="items-center justify-between">
-                <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                  Permission:
-                </Text>
-                {getStatusBadge(
-                  locationInfo?.permissionStatus || 'unknown',
-                  'permission',
-                )}
-              </HStack>
-              {locationInfo?.permissionStatus === 'granted' ? (
-                <>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      Latitude:
-                    </Text>
-                    <Text className="text-gray-900 dark:text-white text-xs">
-                      {locationInfo.latitude?.toFixed(6) || 'Not available'}
-                    </Text>
-                  </HStack>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      Longitude:
-                    </Text>
-                    <Text className="text-gray-900 dark:text-white text-xs">
-                      {locationInfo.longitude?.toFixed(6) || 'Not available'}
-                    </Text>
-                  </HStack>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      Accuracy:
-                    </Text>
-                    <Text className="text-gray-900 dark:text-white text-xs">
-                      {locationInfo.accuracy
-                        ? `${locationInfo.accuracy.toFixed(2)}m`
-                        : 'Not available'}
-                    </Text>
-                  </HStack>
-                  <HStack className="items-center justify-between">
-                    <Text className="text-gray-700 dark:text-gray-300 text-xs">
-                      Altitude:
-                    </Text>
-                    <Text className="text-gray-900 dark:text-white text-xs">
-                      {locationInfo.altitude
-                        ? `${locationInfo.altitude.toFixed(2)}m`
-                        : 'Not available'}
-                    </Text>
-                  </HStack>
-                </>
-              ) : (
-                <Text className="text-gray-500 dark:text-gray-400 text-xs">
-                  {locationInfo?.error ||
-                    'Permission required to access location information'}
-                </Text>
-              )}
-              {renderPermissionButton(
-                handleLocationPermissionRequest,
-                locationInfo?.permissionStatus || 'unknown',
-                'Location',
+                loading,
               )}
             </VStack>,
             loading,

@@ -25,7 +25,7 @@ setup_permissions([
 ])
 # @generated end setup
 
-target 'mobileapp' do
+target 'RumsanWallet' do
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'

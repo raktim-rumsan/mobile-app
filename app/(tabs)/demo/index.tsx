@@ -28,7 +28,7 @@ export default function HomeScreen() {
     {
       title: 'Device Info',
       icon: DevicePhoneMobileIcon,
-      onPress: () => router.push('/demo/device-info'),
+      onPress: () => router.push('/demo/device'),
     },
     {
       title: 'Location Info',
@@ -42,10 +42,7 @@ export default function HomeScreen() {
     },
   ];
   return (
-    <ScrollView
-      className="flex-1 bg-gray-50"
-      contentContainerClassName="px-4 pt-14"
-    >
+    <ScrollView className="flex-1" contentContainerClassName="px-4 pt-14">
       {/* Quick Actions */}
       <Box className="rounded-xl p-2 mt-4">
         <VStack className="space-y-2">

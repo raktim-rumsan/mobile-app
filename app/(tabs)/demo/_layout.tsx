@@ -1,5 +1,6 @@
 import LayoutTpl, { PageConfig } from '@/components/layout';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DemoLayout() {
   const pages: PageConfig[] = [
@@ -26,5 +27,9 @@ export default function DemoLayout() {
     },
   ];
 
-  return <LayoutTpl pages={pages} />;
+  return (
+    <SafeAreaView className="flex-1">
+      <LayoutTpl pages={pages} />
+    </SafeAreaView>
+  );
 }

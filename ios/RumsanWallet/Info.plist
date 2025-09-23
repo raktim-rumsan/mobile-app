@@ -40,6 +40,8 @@
     </array>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
+    <key>GMSApiKey</key>
+    <string>AIzaSyCWhJCIPwFvQkfz1Ah9P_U77oy6L44YVp8</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSMinimumSystemVersion</key>

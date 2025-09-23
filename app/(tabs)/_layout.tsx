@@ -100,7 +100,7 @@ export default function TabLayout() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView className="flex-1">
       <Tabs
         screenOptions={({ route }) => ({
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,

@@ -107,3 +107,11 @@ See [Expo EAS Build docs](https://docs.expo.dev/build/introduction/) for more de
 ---
 
 For more information, see the [Expo documentation](https://docs.expo.dev/) and [Gluestack UI documentation](https://ui.gluestack.io/).
+
+```bash
+# Clean the project
+npx expo prebuild --clean
+
+# Rebuild for Android
+JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home npx expo run:android
+```
